@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marine Life Stock Assessment System Using AI</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
+
+    .navbar {
+      background-color: #001f3f !important;
+    }
+
+    .navbar-brand {
+      font-weight: bold;
+      color: #00d4ff !important;
+    }
+
+    .btn-primary {
+      background-color: #00d4ff;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #0099cc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">
+        🌊 Marine Life AI System
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarSupportedContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" href="/">Dashboard</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="/analysis">Stock Analysis</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="/reports">Reports</a>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    {% block body %}
+    {% endblock body %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

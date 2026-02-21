@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<h2 class="text-center text-warning mb-4">📊 Marine Stock Analysis</h2>
+
+<div class="row text-center">
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white p-3">
+            <h4>Total Species</h4>
+            <h2>{{ data["Total Species"] }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-primary text-white p-3">
+            <h4>Healthy Population</h4>
+            <h2>{{ data["Healthy Population"] }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark p-3">
+            <h4>Endangered</h4>
+            <h2>{{ data["Endangered"] }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-danger text-white p-3">
+            <h4>Critical</h4>
+            <h2>{{ data["Critical"] }}</h2>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
