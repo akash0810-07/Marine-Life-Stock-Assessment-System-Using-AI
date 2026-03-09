@@ -1,344 +1,1413 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>{% block title %}OceanWatch{% endblock %} — Marine Intelligence</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}OceanWatch{% endblock %} — Marine Intelligence</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-<style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  <style>
+  
+  :root { --tr:.35s cubic-bezier(.4,0,.2,1); }
 
-:root {
---deep:#010c18;
---mid:#041525;
---surface:#072540;
---biolume:#00e8b8;
---biolume2:#00bfff;
---coral:#ff5e5b;
---warning:#ffc13b;
---danger:#f02d3a;
---safe:#06d6a0;
---text:#dff0f8;
---muted:#6da5be;
---glass:rgba(7,37,64,0.6);
---border:rgba(0,232,184,0.13);
---font-head:'Syne', sans-serif;
---font-mono:'DM Mono', monospace;
-}
+  [data-theme="dark"] {
+    --bg:       #070e1a;
+    --surface:  #0d1b2e;
+    --card:     rgba(13,27,46,0.78);
+    --glass:    rgba(255,255,255,0.04);
+    --bdr:      rgba(100,210,200,0.13);
+    --bdr-h:    rgba(100,210,200,0.32);
+    --ac:       #3ecfbe;
+    --ac2:      #5ba4f5;
+    --glow:     rgba(62,207,190,0.22);
+    --th:       #e8f4f2;
+    --tp:       #a8c8c4;
+    --tm:       #5a8a85;
+    --danger:   #f05a6e;
+    --warn:     #f5a623;
+    --safe:     #3ecf8e;
+    --shad:     0 8px 40px rgba(0,0,0,.5);
+    --topbg:    rgba(7,14,26,0.93);
+  }
 
-html { scroll-behavior:smooth; }
+  [data-theme="light"] {
+    --bg:       #f0f9f7;
+    --surface:  #ffffff;
+    --card:     rgba(255,255,255,0.9);
+    --glass:    rgba(62,207,190,0.07);
+    --bdr:      rgba(14,158,142,0.18);
+    --bdr-h:    rgba(14,158,142,0.42);
+    --ac:       #0e9e8e;
+    --ac2:      #2563eb;
+    --glow:     rgba(14,158,142,0.15);
+    --th:       #082220;
+    --tp:       #1e4a47;
+    --tm:       #5a8a85;
+    --danger:   #dc2626;
+    --warn:     #d97706;
+    --safe:     #059669;
+    --shad:     0 4px 24px rgba(0,0,0,.09);
+    --topbg:    rgba(240,249,247,0.95);
+  }
 
-body{
-font-family:var(--font-mono);
-background:var(--deep);
-color:var(--text);
-min-height:100vh;
-overflow-x:hidden;
-}
+  
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
 
-body::before{
-content:'';
-position:fixed; inset:0; z-index:-1;
-background:
-radial-gradient(ellipse 70% 50% at 10% 90%, rgba(0,232,184,.05) 0%, transparent 55%),
-radial-gradient(ellipse 50% 60% at 90% 10%, rgba(0,191,255,.04) 0%, transparent 55%),
-linear-gradient(180deg,#010c18 0%,#020f1e 100%);
-}
+  body {
+    font-family:'Outfit',sans-serif;
+    background:var(--bg); color:var(--tp);
+    min-height:100vh; overflow-x:hidden;
+    transition:background var(--tr), color var(--tr);
+  }
 
-#particles{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;}
-.p{position:absolute;border-radius:50%;opacity:0;animation:floatUp linear infinite;}
-@keyframes floatUp{
-0%{transform:translateY(105vh);opacity:0;}
-8%{opacity:.5;}
-92%{opacity:.2;}
-100%{transform:translateY(-5vh) translateX(30px);opacity:0;}
-}
+  [data-theme="dark"] body::before {
+    content:''; position:fixed; inset:0; z-index:-2; pointer-events:none;
+    background:
+      radial-gradient(ellipse 65% 55% at 12% 92%, rgba(62,207,190,.055) 0%,transparent 55%),
+      radial-gradient(ellipse 55% 45% at 88%  8%, rgba(91,164,245,.045) 0%,transparent 55%);
+  }
+  [data-theme="light"] body::before {
+    content:''; position:fixed; inset:0; z-index:-2; pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 40% at  5% 100%, rgba(62,207,190,.08) 0%,transparent 50%),
+      radial-gradient(ellipse 40% 30% at 95%   0%, rgba(91,164,245,.07) 0%,transparent 50%);
+  }
 
-.topbar{
-position:sticky; top:0; z-index:200;
-display:flex; align-items:center; justify-content:space-between;
-padding:.9rem 2rem;
-background:rgba(1,12,24,.82);
-backdrop-filter:blur(16px);
-border-bottom:1px solid var(--border);
-}
+  
+  .topbar {
+    position:sticky; top:0; z-index:300;
+    display:flex; align-items:stretch; height:70px;
+    background:var(--topbg);
+    backdrop-filter:blur(22px) saturate(180%);
+    border-bottom:1px solid var(--bdr);
+    transition:background var(--tr);
+  }
 
-.brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;}
-.brand-icon{width:38px;height:38px;flex-shrink:0;}
+  #fishCanvas {
+    width:250px; height:70px; flex-shrink:0; display:block;
+    cursor:pointer; border-right:1px solid var(--bdr);
+  }
 
-.brand-name{
-font-family:var(--font-head);
-font-size:1.35rem;
-font-weight:800;
-letter-spacing:-.02em;
-background:linear-gradient(130deg,var(--biolume),var(--biolume2));
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-}
+  .brand-wrap {
+    display:flex; align-items:center; gap:.7rem;
+    padding:0 1.3rem; text-decoration:none;
+    border-right:1px solid var(--bdr); flex-shrink:0;
+  }
 
-.brand-sub{
-font-size:.6rem;
-color:var(--muted);
-letter-spacing:.15em;
-text-transform:uppercase;
-}
+  .brand-name {
+    font-family:'Playfair Display',serif;
+    font-size:1.3rem; font-weight:900; letter-spacing:-.02em;
+    background:linear-gradient(130deg, var(--ac), var(--ac2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    display:block; line-height:1.1;
+  }
 
-.nav-links{display:flex;gap:.25rem;}
+  .brand-sub {
+    font-family:'JetBrains Mono',monospace;
+    font-size:.52rem; letter-spacing:.17em;
+    text-transform:uppercase; color:var(--tm);
+    display:block; margin-top:2px;
+  }
 
-.nav-link{
-padding:.5rem 1rem;
-font-family:var(--font-mono);
-font-size:.72rem;
-letter-spacing:.07em;
-text-transform:uppercase;
-color:var(--muted);
-text-decoration:none;
-border-radius:6px;
-transition:all .25s;
-border:1px solid transparent;
-}
+  .nav-links { display:flex; align-items:center; gap:.2rem; padding:0 1.25rem; flex:1; }
 
-.nav-link:hover{color:var(--text);background:rgba(0,232,184,.07);}
-.nav-link.active{color:var(--biolume);border-color:var(--border);background:rgba(0,232,184,.06);}
+  .nav-link {
+    position:relative; padding:.44rem .95rem;
+    font-family:'Outfit',sans-serif; font-size:.8rem; font-weight:500;
+    color:var(--tm); text-decoration:none; border-radius:8px; transition:all .25s;
+  }
+  .nav-link:hover { color:var(--th); background:var(--glass); }
+  .nav-link.active { color:var(--ac); background:var(--glow); font-weight:600; }
+  .nav-link.active::after {
+    content:''; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%);
+    width:55%; height:2px;
+    background:linear-gradient(90deg,transparent,var(--ac),transparent);
+    border-radius:2px;
+  }
 
-.topbar-right{display:flex;align-items:center;gap:1rem;}
+  .topbar-right {
+    display:flex; align-items:center; gap:.9rem;
+    padding:0 1.25rem; border-left:1px solid var(--bdr);
+  }
 
-.live-pill{
-display:flex;align-items:center;gap:.4rem;
-font-size:.65rem;color:var(--safe);letter-spacing:.1em;text-transform:uppercase;
-}
+  .live-badge {
+    display:flex; align-items:center; gap:.4rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--safe); background:rgba(62,207,142,.08);
+    border:1px solid rgba(62,207,142,.22);
+    padding:.28rem .65rem; border-radius:20px; white-space:nowrap;
+  }
+  .live-dot {
+    width:6px; height:6px; background:var(--safe); border-radius:50%;
+    animation:blink 1.6s ease-in-out infinite; box-shadow:0 0 6px var(--safe);
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
 
-.live-dot{
-width:7px;height:7px;background:var(--safe);border-radius:50%;
-animation:blink 1.5s ease-in-out infinite;
-box-shadow:0 0 7px var(--safe);
-}
+  .theme-toggle {
+    position:relative; width:44px; height:24px;
+    background:var(--glass); border:1px solid var(--bdr);
+    border-radius:12px; cursor:pointer; flex-shrink:0; padding:0;
+    transition:all .3s;
+  }
+  .theme-toggle::after {
+    content:''; position:absolute; top:3px; left:3px;
+    width:16px; height:16px; border-radius:50%;
+    background:linear-gradient(135deg, var(--ac), var(--ac2));
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 2px 6px rgba(0,0,0,.3);
+  }
+  [data-theme="light"] .theme-toggle::after { transform:translateX(20px); }
+  .t-icon { position:absolute; top:50%; transform:translateY(-50%); font-size:.68rem; pointer-events:none; transition:opacity .3s; }
+  .t-moon { right:5px; } .t-sun { left:5px; }
+  [data-theme="dark"]  .t-sun  { opacity:0; } [data-theme="dark"]  .t-moon { opacity:1; }
+  [data-theme="light"] .t-sun  { opacity:1; } [data-theme="light"] .t-moon { opacity:0; }
 
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  
+  .predictor-bar {
+    background:var(--surface); border-bottom:1px solid var(--bdr);
+    padding:.8rem 1.5rem; display:flex; align-items:center; gap:.9rem;
+    flex-wrap:wrap; transition:background var(--tr);
+  }
+  .pred-label {
+    font-family:'Playfair Display',serif; font-size:.92rem; font-weight:700;
+    color:var(--th); white-space:nowrap;
+  }
+  .pred-select, .pred-year {
+    font-family:'Outfit',sans-serif; font-size:.8rem; font-weight:500;
+    color:var(--th); background:var(--card); border:1px solid var(--bdr);
+    border-radius:9px; padding:.44rem .85rem; outline:none; cursor:pointer;
+    transition:border-color .25s, background var(--tr);
+  }
+  .pred-select { min-width:185px; } .pred-year { min-width:155px; }
+  .pred-select:focus, .pred-year:focus { border-color:var(--ac); box-shadow:0 0 0 3px var(--glow); }
+  .pred-select option { background:var(--surface); color:var(--th); }
+  .pred-btn {
+    font-family:'Outfit',sans-serif; font-size:.8rem; font-weight:600;
+    padding:.44rem 1.25rem;
+    background:linear-gradient(135deg,var(--ac),var(--ac2));
+    color:#fff; border:none; border-radius:9px; cursor:pointer;
+    transition:all .25s; white-space:nowrap; box-shadow:0 4px 14px var(--glow);
+  }
+  .pred-btn:hover { opacity:.9; transform:translateY(-1px); }
+  .pred-result {
+    display:none; align-items:center; gap:.55rem;
+    padding:.38rem 1rem; border-radius:24px;
+    font-size:.8rem; font-weight:600;
+    animation:fadeUp .4s ease forwards; white-space:nowrap;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+  .pred-result.show    { display:flex; }
+  .pred-result.exhaust { background:rgba(240,90,110,.12); border:1px solid rgba(240,90,110,.35); color:var(--danger); }
+  .pred-result.warn    { background:rgba(245,166,35,.1);  border:1px solid rgba(245,166,35,.3);  color:var(--warn); }
+  .pred-result.safe    { background:rgba(62,207,142,.1);  border:1px solid rgba(62,207,142,.28); color:var(--safe); }
+  .pred-mini { display:none; align-items:flex-end; gap:2px; height:28px; margin-left:.3rem; }
+  .pred-mini.show { display:flex; }
+  .mini-bar { width:7px; border-radius:2px 2px 0 0; flex-shrink:0; transition:height .7s cubic-bezier(.4,0,.2,1); }
 
-.page{position:relative;z-index:1;padding:2rem 2rem 3rem;}
+  
+  .page { position:relative; z-index:1; padding:1.75rem 1.75rem 3rem; max-width:1440px; margin:0 auto; }
 
-.card{
-background:var(--glass);
-border:1px solid var(--border);
-border-radius:14px;
-padding:1.5rem;
-backdrop-filter:blur(10px);
-position:relative;
-overflow:hidden;
-}
+  
+  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.75rem; }
+  .stat-card {
+    background:var(--card); border:1px solid var(--bdr); border-radius:14px;
+    padding:1.25rem 1.4rem; backdrop-filter:blur(12px);
+    transition:all var(--tr); cursor:default;
+  }
+  .stat-card:hover { transform:translateY(-3px); border-color:var(--bdr-h); box-shadow:var(--shad); }
+  .stat-label {
+    font-family:'JetBrains Mono',monospace; font-size:.6rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--tm); margin-bottom:.45rem;
+  }
+  .stat-value { font-family:'Playfair Display',serif; font-size:2rem; font-weight:900; line-height:1; }
+  .stat-sub { font-size:.65rem; color:var(--tm); margin-top:.35rem; }
+  .c-ac { color:var(--ac); } .c-danger { color:var(--danger); }
+  .c-warn { color:var(--warn); } .c-safe { color:var(--safe); } .c-muted { color:var(--tm); }
 
-.card::before{
-content:'';
-position:absolute;top:0;left:0;right:0;height:1px;
-background:linear-gradient(90deg,transparent,var(--biolume),transparent);
-opacity:.4;
-}
+  
+  .bubble-nav {
+    display:flex; gap:1.1rem; margin-bottom:2rem; flex-wrap:wrap;
+  }
 
-.card:hover{border-color:rgba(0,232,184,.25);}
+  .bubble {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    width:92px; height:92px; border-radius:50%;
+    border:2px solid var(--bdr); background:var(--card);
+    backdrop-filter:blur(12px); cursor:pointer;
+    transition:all .32s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 4px 20px rgba(0,0,0,.25);
+    outline:none; gap:.28rem; position:relative;
+  }
 
-.card-header{
-display:flex;align-items:center;justify-content:space-between;
-margin-bottom:1.2rem;
-}
+  .bubble:hover {
+    transform:translateY(-5px) scale(1.07);
+    border-color:var(--ac);
+    box-shadow:0 10px 30px var(--glow), 0 0 0 4px rgba(62,207,190,.1);
+  }
 
-.card-title{
-font-family:var(--font-head);
-font-size:.85rem;
-font-weight:700;
-letter-spacing:.06em;
-text-transform:uppercase;
-color:var(--text);
-}
+  .bubble.active {
+    background:linear-gradient(135deg, var(--ac), var(--ac2));
+    border-color:transparent;
+    box-shadow:0 10px 32px var(--glow);
+    transform:translateY(-5px) scale(1.09);
+  }
 
-.badge{
-display:inline-block;
-font-size:.58rem;font-weight:700;
-padding:.22rem .55rem;
-border-radius:20px;
-letter-spacing:.07em;
-text-transform:uppercase;
-}
+  .bubble.active .b-icon,
+  .bubble.active .b-label { color:#fff !important; }
 
-.badge-live{background:rgba(6,214,160,.12);color:var(--safe);border:1px solid rgba(6,214,160,.3);}
-.badge-danger{background:rgba(240,45,58,.14);color:var(--danger);border:1px solid rgba(240,45,58,.3);}
-.badge-warning{background:rgba(255,193,59,.12);color:var(--warning);border:1px solid rgba(255,193,59,.3);}
-.badge-biolume{background:rgba(0,232,184,.1);color:var(--biolume);border:1px solid rgba(0,232,184,.25);}
+  
+  .bubble.active::after {
+    content:''; position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
+    width:6px; height:6px; background:var(--ac); border-radius:50%;
+    box-shadow:0 0 8px var(--ac);
+  }
 
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+  .b-icon  { font-size:1.55rem; line-height:1; }
+  .b-label {
+    font-family:'Outfit',sans-serif; font-size:.56rem; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--tm);
+    text-align:center; line-height:1.25;
+  }
 
-.stat-card{
-background:var(--glass);
-border:1px solid var(--border);
-border-radius:12px;
-padding:1.2rem 1.4rem;
-backdrop-filter:blur(10px);
-transition:transform .3s,border-color .3s;
-}
+  
+  .sec-panel { display:none; }
+  .sec-panel.active { display:block; animation:panIn .38s ease; }
+  @keyframes panIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
 
-.stat-card:hover{transform:translateY(-2px);border-color:rgba(0,232,184,.3);}
+  
+  .card {
+    background:var(--card); border:1px solid var(--bdr); border-radius:16px;
+    padding:1.5rem; backdrop-filter:blur(12px); box-shadow:var(--shad);
+    transition:background var(--tr), border-color var(--tr);
+    position:relative; overflow:hidden;
+  }
+  .card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--ac),transparent); opacity:.3;
+  }
+  .card:hover { border-color:var(--bdr-h); }
+  .card-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; }
+  .card-title { font-family:'Playfair Display',serif; font-size:.95rem; font-weight:700; color:var(--th); }
 
-.stat-label{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;}
+  
+  .g2 { display:grid; grid-template-columns:1fr 1fr;   gap:1.25rem; }
+  .g3 { display:grid; grid-template-columns:2fr 1fr;   gap:1.25rem; }
+  .ga { display:grid; grid-template-columns:1.5fr 1fr; gap:1.25rem; }
+  .mb { margin-bottom:1.25rem; }
+  .chart-wrap { position:relative; height:230px; }
+  .chart-tall { position:relative; height:300px; }
 
-.stat-value{
-font-family:var(--font-head);
-font-size:1.9rem;
-font-weight:800;
-line-height:1;
-}
+  
+  .badge {
+    font-family:'JetBrains Mono',monospace; font-size:.57rem; font-weight:500;
+    padding:.2rem .55rem; border-radius:20px; letter-spacing:.07em; text-transform:uppercase;
+  }
+  .bdg-live { background:rgba(62,207,142,.1);  color:var(--safe);   border:1px solid rgba(62,207,142,.25); }
+  .bdg-danger{ background:rgba(240,90,110,.1); color:var(--danger); border:1px solid rgba(240,90,110,.25); }
+  .bdg-warn  { background:rgba(245,166,35,.1); color:var(--warn);   border:1px solid rgba(245,166,35,.25); }
+  .bdg-ac    { background:rgba(62,207,190,.09);color:var(--ac);     border:1px solid rgba(62,207,190,.22); }
 
-.stat-sub{font-size:.6rem;color:var(--muted);margin-top:.3rem;}
+  
+  .risk-row {
+    display:grid; grid-template-columns:1fr 120px 52px 76px;
+    align-items:center; gap:.9rem; padding:.75rem 0;
+    border-bottom:1px solid var(--bdr); transition:background .2s;
+  }
+  .risk-row:hover { background:var(--glass); border-radius:8px; padding-left:.5rem; }
+  .risk-row:last-child { border-bottom:none; }
+  .rn { font-size:.8rem; font-weight:600; color:var(--th); }
+  .rs { font-size:.62rem; color:var(--tm); font-style:italic; margin-top:2px; }
+  .rbar { width:100%; height:5px; background:rgba(128,128,128,.12); border-radius:3px; overflow:hidden; }
+  .rfill { height:100%; border-radius:3px; }
+  .rpct { font-family:'JetBrains Mono',monospace; font-size:.7rem; }
+  .rb { font-family:'JetBrains Mono',monospace; font-size:.57rem; padding:.2rem .46rem; border-radius:5px; font-weight:700; text-transform:uppercase; text-align:center; }
+  .rb-critical { background:rgba(240,90,110,.14); color:var(--danger); }
+  .rb-high     { background:rgba(245,166,35,.12); color:var(--warn); }
+  .rb-moderate { background:rgba(62,207,190,.10); color:var(--ac); }
+  .rb-low      { background:rgba(62,207,142,.12); color:var(--safe); }
 
-.c-biolume{color:var(--biolume);}
-.c-danger{color:var(--danger);}
-.c-warning{color:var(--warning);}
-.c-safe{color:var(--safe);}
-.c-muted{color:var(--muted);}
+  
+  .overview-facts {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.25rem;
+  }
+  .fact-card {
+    background:var(--glass); border:1px solid var(--bdr); border-radius:12px;
+    padding:1rem 1.1rem;
+  }
+  .fact-icon { font-size:1.4rem; margin-bottom:.4rem; }
+  .fact-title { font-family:'Playfair Display',serif; font-size:.82rem; font-weight:700; color:var(--th); margin-bottom:.3rem; }
+  .fact-body  { font-size:.72rem; color:var(--tp); line-height:1.6; }
 
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
-.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;}
-.grid-a{display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;}
-.mb{margin-bottom:1.25rem;}
+  .timeline { list-style:none; position:relative; padding-left:1.5rem; }
+  .timeline::before {
+    content:''; position:absolute; left:.35rem; top:0; bottom:0; width:2px;
+    background:linear-gradient(to bottom, var(--ac), transparent);
+    border-radius:2px;
+  }
+  .tl-item { position:relative; margin-bottom:1rem; }
+  .tl-item::before {
+    content:''; position:absolute; left:-1.15rem; top:.3rem;
+    width:8px; height:8px; border-radius:50%; background:var(--ac);
+    box-shadow:0 0 6px var(--ac);
+  }
+  .tl-year  { font-family:'JetBrains Mono',monospace; font-size:.62rem; color:var(--ac); margin-bottom:.15rem; }
+  .tl-text  { font-size:.74rem; color:var(--tp); line-height:1.5; }
 
-.chart-wrap{position:relative;height:230px;}
-.chart-wrap-tall{position:relative;height:300px;}
+  
+  .pop-table { width:100%; border-collapse:collapse; font-size:.75rem; }
+  .pop-table th {
+    text-align:left; padding:.55rem .75rem;
+    font-family:'JetBrains Mono',monospace; font-size:.58rem;
+    letter-spacing:.1em; text-transform:uppercase;
+    color:var(--tm); border-bottom:1px solid var(--bdr);
+  }
+  .pop-table td { padding:.65rem .75rem; border-bottom:1px solid var(--bdr); color:var(--th); }
+  .pop-table tr:hover td { background:var(--glass); }
+  .pop-table tr:last-child td { border-bottom:none; }
+  .pop-bar-cell { width:140px; }
+  .pop-bar { height:6px; background:rgba(128,128,128,.12); border-radius:3px; overflow:hidden; }
+  .pop-fill { height:100%; border-radius:3px; }
 
-.risk-row{
-display:grid;
-grid-template-columns:1fr 110px 52px 72px;
-align-items:center;
-gap:.9rem;
-padding:.75rem 0;
-border-bottom:1px solid rgba(0,232,184,.06);
-}
+  
+  .alert-year-filter {
+    display:flex; align-items:center; gap:.75rem; margin-bottom:1.25rem; flex-wrap:wrap;
+  }
+  .yr-btn {
+    font-family:'JetBrains Mono',monospace; font-size:.68rem; font-weight:500;
+    padding:.35rem .85rem; border-radius:20px; cursor:pointer;
+    background:var(--glass); border:1px solid var(--bdr); color:var(--tm);
+    transition:all .22s;
+  }
+  .yr-btn:hover { border-color:var(--ac); color:var(--th); }
+  .yr-btn.active {
+    background:linear-gradient(135deg,var(--ac),var(--ac2));
+    border-color:transparent; color:#fff;
+    box-shadow:0 4px 14px var(--glow);
+  }
 
-.risk-row:last-child{border-bottom:none;}
+  .alert-card {
+    background:var(--glass); border:1px solid var(--bdr); border-radius:12px;
+    padding:1rem 1.2rem; margin-bottom:.75rem;
+    display:grid; grid-template-columns:auto 1fr auto auto;
+    align-items:center; gap:1rem;
+    transition:border-color .22s;
+  }
+  .alert-card:hover { border-color:var(--bdr-h); }
+  .alert-card.critical { border-left:3px solid var(--danger); }
+  .alert-card.high     { border-left:3px solid var(--warn); }
+  .alert-card.moderate { border-left:3px solid var(--ac); }
 
-.risk-name{font-size:.78rem;}
-.risk-sci{font-size:.6rem;color:var(--muted);font-style:italic;margin-top:2px;}
+  .ac-emoji { font-size:1.5rem; }
+  .ac-name  { font-family:'Playfair Display',serif; font-size:.9rem; font-weight:700; color:var(--th); }
+  .ac-sci   { font-size:.65rem; color:var(--tm); font-style:italic; margin-top:2px; }
+  .ac-detail{ font-size:.72rem; color:var(--tp); margin-top:.3rem; line-height:1.5; }
+  .ac-pop   { text-align:center; }
+  .ac-pop-val { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; }
+  .ac-pop-lbl { font-size:.6rem; color:var(--tm); margin-top:2px; }
 
-.risk-bar{width:100%;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
-.risk-fill{height:100%;border-radius:2px;}
+  
+  .map-outer {
+    position:relative; height:420px; border-radius:14px; overflow:hidden;
+    border:1px solid var(--bdr); background:#020d18;
+  }
+  .map-outer svg { position:absolute; inset:0; width:100%; height:100%; }
+  .map-tip {
+    position:absolute; background:var(--surface); border:1px solid var(--bdr-h);
+    border-radius:10px; padding:.6rem .9rem; font-size:.7rem;
+    pointer-events:none; opacity:0; transition:opacity .2s; z-index:30;
+    min-width:150px; box-shadow:var(--shad);
+  }
+  .map-tip.show { opacity:1; }
+  .mt-name { font-family:'Playfair Display',serif; font-size:.82rem; font-weight:700; color:var(--th); margin-bottom:.25rem; }
+  .mt-row  { display:flex; justify-content:space-between; gap:.5rem; font-size:.66rem; color:var(--tp); padding:.1rem 0; }
+  .mt-val  { font-weight:600; }
 
-.risk-pct{font-size:.68rem;}
+  .map-legend {
+    position:absolute; bottom:.85rem; right:.85rem;
+    background:var(--surface); border:1px solid var(--bdr);
+    border-radius:10px; padding:.6rem .85rem; font-size:.63rem;
+  }
+  .ml-item { display:flex; align-items:center; gap:.38rem; color:var(--tm); margin-bottom:.28rem; }
+  .ml-item:last-child { margin-bottom:0; }
+  .ml-dot  { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
 
-.rb{font-size:.58rem;padding:.2rem .45rem;border-radius:4px;font-weight:700;text-transform:uppercase;text-align:center;}
-.rb-critical{background:rgba(240,45,58,.18);color:var(--danger);}
-.rb-high{background:rgba(255,193,59,.15);color:var(--warning);}
-.rb-moderate{background:rgba(0,232,184,.1);color:var(--biolume);}
-.rb-low{background:rgba(6,214,160,.12);color:var(--safe);}
+  .map-filter {
+    position:absolute; top:.85rem; left:.85rem; z-index:20;
+    display:flex; gap:.4rem; flex-wrap:wrap;
+  }
+  .mf-btn {
+    font-family:'JetBrains Mono',monospace; font-size:.6rem;
+    padding:.22rem .55rem; border-radius:12px; cursor:pointer;
+    background:rgba(7,14,26,.8); border:1px solid var(--bdr); color:var(--tm);
+    transition:all .2s;
+  }
+  .mf-btn:hover { border-color:var(--ac); color:var(--th); }
+  .mf-btn.on { background:var(--ac); border-color:transparent; color:#000; }
 
-.btn{
-padding:.65rem 1.2rem;
-background:var(--biolume);
-color:var(--deep);
-border:none;border-radius:8px;
-font-family:var(--font-mono);
-font-size:.72rem;font-weight:700;
-letter-spacing:.06em;text-transform:uppercase;
-cursor:pointer;transition:all .25s;
-}
+  
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--bdr); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--bdr-h); }
 
-.btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+  
+  #toast {
+    position:fixed; bottom:1.75rem; right:1.75rem; z-index:999;
+    padding:.9rem 1.4rem; border-radius:12px;
+    font-family:'Outfit',sans-serif; font-size:.8rem; font-weight:500;
+    opacity:0; transform:translateY(8px);
+    transition:all .35s; pointer-events:none; backdrop-filter:blur(12px);
+  }
+  #toast.show    { opacity:1; transform:translateY(0); }
+  #toast.success { background:rgba(62,207,142,.14); border:1px solid var(--safe); color:var(--safe); }
+  #toast.error   { background:rgba(240,90,110,.12);  border:1px solid var(--danger); color:var(--danger); }
 
-.btn-outline{
-background:transparent;
-color:var(--biolume);
-border:1px solid var(--biolume);
-}
-
-.btn-outline:hover{background:rgba(0,232,184,.1);}
-
-#toast{
-position:fixed;bottom:1.75rem;right:1.75rem;z-index:999;
-background:rgba(6,214,160,.12);
-border:1px solid var(--safe);
-border-radius:10px;
-padding:.9rem 1.4rem;
-color:var(--safe);
-font-size:.73rem;
-opacity:0;transform:translateY(8px);
-transition:all .35s;pointer-events:none;
-}
-
-#toast.show{opacity:1;transform:translateY(0);}
-
-@media(max-width:900px){
-.stat-grid{grid-template-columns:repeat(2,1fr);}
-.grid-2,.grid-3,.grid-a{grid-template-columns:1fr;}
-.page{padding:1.25rem 1rem 3rem;}
-.topbar{padding:.75rem 1rem;}
-.nav-links{gap:.1rem;}
-.nav-link{padding:.45rem .6rem;font-size:.65rem;}
-}
-</style>
-
-{% block head %}{% endblock %}
+  
+  @media(max-width:960px){
+    .stat-grid { grid-template-columns:repeat(2,1fr); }
+    .g2,.g3,.ga { grid-template-columns:1fr; }
+    .overview-facts { grid-template-columns:1fr 1fr; }
+    .page { padding:1.25rem 1rem 3rem; }
+    #fishCanvas { width:160px; }
+  }
+  @media(max-width:640px){
+    #fishCanvas { width:90px; }
+    .brand-name { font-size:1.1rem; }
+    .overview-facts { grid-template-columns:1fr; }
+    .bubble { width:78px; height:78px; }
+    .b-icon { font-size:1.3rem; }
+  }
+  </style>
+  {% block head %}{% endblock %}
 </head>
-
 <body>
 
-<div id="particles"></div>
-
 <header class="topbar">
-<a href="{{ url_for('index') }}" class="brand">
-<svg class="brand-icon" viewBox="0 0 38 38" fill="none">
-<circle cx="19" cy="19" r="18" stroke="#00e8b8" stroke-width="1.2" opacity=".35"/>
-<path d="M5 19 C10 11 15 7 19 7 C23 7 28 11 33 19 C28 27 23 31 19 31 C15 31 10 27 5 19Z" fill="none" stroke="#00e8b8" stroke-width="1.3"/>
-<circle cx="19" cy="19" r="5" fill="#00e8b8" opacity=".25"/>
-<circle cx="19" cy="19" r="2" fill="#00e8b8"/>
-<line x1="19" y1="7" x2="19" y2="31" stroke="#00e8b8" stroke-width=".5" opacity=".25"/>
-<line x1="5" y1="19" x2="33" y2="19" stroke="#00e8b8" stroke-width=".5" opacity=".25"/>
-</svg>
+  <canvas id="fishCanvas" title="Click to animate!"></canvas>
 
-<div>
-<div class="brand-name">OceanWatch</div>
-<div class="brand-sub">Marine Intelligence Platform</div>
-</div>
-</a>
+  <a href="{{ url_for('index') }}" class="brand-wrap">
+    <div>
+      <span class="brand-name">OceanWatch</span>
+      <span class="brand-sub">Marine Intelligence Platform</span>
+    </div>
+  </a>
 
-<nav class="nav-links">
-<a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint=='index' %}active{% endif %}">Dashboard</a>
-<a href="{{ url_for('analysis') }}" class="nav-link {% if request.endpoint=='analysis' %}active{% endif %}">Analysis</a>
-</nav>
+  <nav class="nav-links">
+    <a href="{{ url_for('index') }}"    class="nav-link {% if request.endpoint=='index'    %}active{% endif %}">Dashboard</a>
+    <a href="{{ url_for('analysis') }}" class="nav-link {% if request.endpoint=='analysis' %}active{% endif %}">Analysis</a>
+  </nav>
 
-<div class="topbar-right">
-<div class="live-pill"><div class="live-dot"></div> Live API</div>
-</div>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div>Live API</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span class="t-icon t-moon">🌙</span>
+      <span class="t-icon t-sun">☀️</span>
+    </button>
+  </div>
 </header>
 
+<div class="predictor-bar">
+  <span class="pred-label">🔬 Population Forecast</span>
+  <select class="pred-select" id="predFish">
+    <option value="">— Select a species —</option>
+    <option value="bluefin_tuna">Atlantic Bluefin Tuna</option>
+    <option value="atlantic_cod">Atlantic Cod</option>
+    <option value="swordfish">Swordfish</option>
+    <option value="yellowfin_tuna">Yellowfin Tuna</option>
+    <option value="grouper">Bluefin Grouper</option>
+    <option value="herring">North Sea Herring</option>
+    <option value="halibut">Pacific Halibut</option>
+    <option value="pollock">Alaskan Pollock</option>
+    <option value="salmon">Pacific Salmon</option>
+    <option value="shark">Great White Shark</option>
+  </select>
+  <input class="pred-year" id="predYear" type="number" min="2025" max="2100" placeholder="Target year (e.g. 2045)"/>
+  <button class="pred-btn" onclick="runPrediction()">Run Forecast ›</button>
+  <div class="pred-result" id="predResult"><span id="predIcon"></span><span id="predText"></span></div>
+  <div class="pred-mini" id="predMini"></div>
+</div>
+
 <main class="page">
-{% block content %}{% endblock %}
+
+  
+  {% block page_header %}{% endblock %}
+
+  
+  {% if stats is defined %}
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Species Tracked</div>
+      <div class="stat-value c-ac">{{ stats.species_count }}</div>
+      <div class="stat-sub">via GBIF API</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Global Observations</div>
+      <div class="stat-value">{{ stats.obs_count }}</div>
+      <div class="stat-sub">worldwide sightings</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Overfishing Alerts</div>
+      <div class="stat-value c-danger">{{ stats.alerts }}</div>
+      <div class="stat-sub">critical zones active</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Ecosystem Health</div>
+      <div class="stat-value c-safe">{{ stats.health }}%</div>
+      <div class="stat-sub">ocean stability index</div>
+    </div>
+  </div>
+  {% endif %}
+
+  
+  {% if stats is defined %}
+  <div class="bubble-nav">
+    <button class="bubble active" onclick="openSec(this,'overview')" aria-label="Overview">
+      <span class="b-icon">🌊</span>
+      <span class="b-label">Overview</span>
+    </button>
+    <button class="bubble" onclick="openSec(this,'population')" aria-label="Population">
+      <span class="b-icon">🐠</span>
+      <span class="b-label">Population</span>
+    </button>
+    <button class="bubble" onclick="openSec(this,'alerts')" aria-label="Risk Alerts">
+      <span class="b-icon">⚠️</span>
+      <span class="b-label">Risk Alerts</span>
+    </button>
+    <button class="bubble" onclick="openSec(this,'map')" aria-label="Species Map">
+      <span class="b-icon">🗺️</span>
+      <span class="b-label">Species Map</span>
+    </button>
+  </div>
+
+  
+  <div class="sec-panel active" id="sec-overview">
+
+    
+    <div class="overview-facts mb">
+      <div class="fact-card">
+        <div class="fact-icon">🌍</div>
+        <div class="fact-title">Global Ocean Coverage</div>
+        <div class="fact-body">OceanWatch monitors <strong style="color:var(--ac)">71%</strong> of Earth's surface — tracking fish stocks across all 5 major ocean basins via GBIF's live satellite and vessel observation network.</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-icon">📉</div>
+        <div class="fact-title">Overfishing Crisis</div>
+        <div class="fact-body"><strong style="color:var(--danger)">34%</strong> of global fish stocks are overfished. The Atlantic Bluefin Tuna population has declined by <strong style="color:var(--danger)">72%</strong> since 1970 due to commercial overexploitation.</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-icon">🤝</div>
+        <div class="fact-title">Authority Action</div>
+        <div class="fact-body">Data feeds <strong style="color:var(--ac)">14 national</strong> fisheries authorities. Quota recommendations updated in real time from population indices and GBIF occurrence records.</div>
+      </div>
+    </div>
+
+    
+    <div class="g3 mb">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Population Trends — Annual</span>
+          <span class="badge bdg-live">Live</span>
+        </div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Species by Class</span>
+          <span class="badge bdg-ac">GBIF</span>
+        </div>
+        <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+      </div>
+    </div>
+
+    
+    <div class="ga mb">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Overfishing Risk Index</span>
+          <span class="badge bdg-danger">{{ stats.alerts }} Critical</span>
+        </div>
+        {% for r in risk_data %}
+        <div class="risk-row">
+          <div><div class="rn">{{ r.name }}</div><div class="rs">{{ r.sci }}</div></div>
+          <div><div class="rbar"><div class="rfill" style="width:{{ r.pct }}%;background:{% if r.level=='critical' %}var(--danger){% elif r.level=='high' %}var(--warn){% elif r.level=='moderate' %}var(--ac){% else %}var(--safe){% endif %};"></div></div></div>
+          <div class="rpct" style="color:{% if r.level=='critical' %}var(--danger){% elif r.level=='high' %}var(--warn){% elif r.level=='moderate' %}var(--ac){% else %}var(--safe){% endif %};">{{ r.pct }}%</div>
+          <span class="rb rb-{{ r.level }}">{{ r.level }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Key Events Timeline</span></div>
+        <ul class="timeline">
+          <li class="tl-item"><div class="tl-year">2024</div><div class="tl-text">GBIF records 10.6M+ fish observations globally. Atlantic Cod reaches all-time population low.</div></li>
+          <li class="tl-item"><div class="tl-year">2022</div><div class="tl-text">North Pacific Salmon stocks recover to 78% health index after 3-year selective fishing ban.</div></li>
+          <li class="tl-item"><div class="tl-year">2020</div><div class="tl-text">COVID lockdowns reduced trawling by 12% — measurable recovery in Mediterranean Swordfish.</div></li>
+          <li class="tl-item"><div class="tl-year">2018</div><div class="tl-text">EU introduces emergency quota cuts for Bluefin Tuna after population drops below 30%.</div></li>
+          <li class="tl-item"><div class="tl-year">2015</div><div class="tl-text">UN SDG 14 adopted — "Life Below Water" sets global framework for sustainable ocean use.</div></li>
+          <li class="tl-item"><div class="tl-year">2010</div><div class="tl-text">GBIF launches open-access marine biodiversity database, enabling real-time species tracking.</div></li>
+        </ul>
+      </div>
+    </div>
+
+    
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Fishing Quota Compliance — Current Season</span>
+        <span class="badge bdg-danger">3 Exceeded</span>
+      </div>
+      <div class="chart-tall"><canvas id="quotaChart"></canvas></div>
+    </div>
+
+  </div>
+
+  
+  <div class="sec-panel" id="sec-population">
+
+    <div class="g2 mb">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Population by Ocean Region</span>
+        </div>
+        <div class="chart-tall"><canvas id="barChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">10-Year Population Trajectory</span>
+        </div>
+        <div class="chart-tall"><canvas id="trajChart"></canvas></div>
+      </div>
+    </div>
+
+    
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Worldwide Fish Categories & Population Estimates</span>
+        <span class="badge bdg-live">GBIF Data</span>
+      </div>
+      <table class="pop-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Common Species</th>
+            <th>Ocean Region</th>
+            <th>Est. Population</th>
+            <th>Trend</th>
+            <th>Health Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="popTableBody">
+          
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  
+  <div class="sec-panel" id="sec-alerts">
+
+    
+    <div class="alert-year-filter">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--tm);">Filter by year:</span>
+      <button class="yr-btn active" onclick="filterAlerts(this,'all')">All Years</button>
+      <button class="yr-btn" onclick="filterAlerts(this,'2024')">2024</button>
+      <button class="yr-btn" onclick="filterAlerts(this,'2030')">2030</button>
+      <button class="yr-btn" onclick="filterAlerts(this,'2035')">2035</button>
+      <button class="yr-btn" onclick="filterAlerts(this,'2040')">2040</button>
+      <button class="yr-btn" onclick="filterAlerts(this,'2050')">2050</button>
+    </div>
+
+    
+    <div class="stat-grid mb">
+      <div class="stat-card">
+        <div class="stat-label">Critical Species</div>
+        <div class="stat-value c-danger" id="alertCritCount">3</div>
+        <div class="stat-sub">immediate action needed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">High Risk</div>
+        <div class="stat-value c-warn" id="alertHighCount">3</div>
+        <div class="stat-sub">monitoring required</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Moderate Risk</div>
+        <div class="stat-value c-ac" id="alertModCount">1</div>
+        <div class="stat-sub">watch closely</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Safe Species</div>
+        <div class="stat-value c-safe" id="alertSafeCount">3</div>
+        <div class="stat-sub">within sustainable limits</div>
+      </div>
+    </div>
+
+    <div id="alertList"></div>
+
+  </div>
+
+  
+  <div class="sec-panel" id="sec-map">
+
+    <div class="card mb">
+      <div class="card-hdr">
+        <span class="card-title">Global Species Distribution Map</span>
+        <span class="badge bdg-live">Real-time GBIF</span>
+      </div>
+      <div class="map-outer" id="mapOuter">
+        <div class="map-tip" id="mapTip"></div>
+        
+        <div class="map-filter">
+          <button class="mf-btn on" onclick="toggleMapFilter(this,'critical')">Critical</button>
+          <button class="mf-btn on" onclick="toggleMapFilter(this,'high')">High</button>
+          <button class="mf-btn on" onclick="toggleMapFilter(this,'moderate')">Moderate</button>
+          <button class="mf-btn on" onclick="toggleMapFilter(this,'low')">Low</button>
+        </div>
+      </div>
+      <p style="font-size:.65rem;color:var(--tm);margin-top:.75rem;">
+        Hover markers to see species details · Dot size reflects population count · Color indicates risk level
+      </p>
+    </div>
+
+    
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Live GBIF Observation Feed</span>
+        <span class="badge bdg-live">Streaming</span>
+      </div>
+      <div id="obsFeed" style="max-height:280px;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;padding:2rem;color:var(--tm);font-size:.75rem;">
+          <div style="width:16px;height:16px;border:2px solid var(--bdr);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;"></div>
+          Fetching live observations…
+        </div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+
+  
+  {% block content %}{% endblock %}
+
 </main>
 
 <div id="toast"></div>
 
 <script>
+
+const html  = document.documentElement;
+const saved = localStorage.getItem('ow-theme') || 'dark';
+html.setAttribute('data-theme', saved);
+
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('ow-theme', next);
+  if(window._fishTheme) window._fishTheme(next);
+});
+
 (function(){
-const c=document.getElementById('particles');
-for(let i=0;i<22;i++){
-const p=document.createElement('div');
-p.className='p';
-const sz=Math.random()*2.5+1;
-p.style.cssText=`left:${Math.random()*100}%;width:${sz}px;height:${sz}px;background:#00e8b8;animation-duration:${Math.random()*18+14}s;animation-delay:${Math.random()*20}s;`;
-c.appendChild(p);
-}
+  const canvas = document.getElementById('fishCanvas');
+  if(!canvas || !window.THREE) return;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.set(0, 0, 5.2);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+  const dirL = new THREE.DirectionalLight(0x3ecfbe, 2.0); dirL.position.set(4,3,3); scene.add(dirL);
+  const rimL = new THREE.DirectionalLight(0x5ba4f5, 1.2); rimL.position.set(-3,-1,2); scene.add(rimL);
+
+  const bodyMat  = new THREE.MeshPhongMaterial({ color:0x1aab9a, specular:0x3ecfbe, shininess:140, transparent:true, opacity:.96 });
+  const bellyMat = new THREE.MeshPhongMaterial({ color:0xd0f0ec, transparent:true, opacity:.55 });
+  const finMat   = new THREE.MeshPhongMaterial({ color:0x0d8a7a, transparent:true, opacity:.82, side:THREE.DoubleSide });
+  const eyeMat   = new THREE.MeshPhongMaterial({ color:0x000000, specular:0xffffff, shininess:250 });
+  const pupMat   = new THREE.MeshPhongMaterial({ color:0x3ecfbe, transparent:true, opacity:.6 });
+
+  const fish = new THREE.Group();
+  const bG = new THREE.SphereGeometry(1,32,22); bG.scale(1.65,.52,.44);
+  fish.add(new THREE.Mesh(bG, bodyMat));
+  const blG = new THREE.SphereGeometry(.88,24,16); blG.scale(1.4,.36,.36);
+  const bl = new THREE.Mesh(blG, bellyMat); bl.position.set(.05,-.07,.06); fish.add(bl);
+
+  function cone(rT,rB,h,seg,mat,px,py,pz,rx,ry,rz){
+    const g = new THREE.CylinderGeometry(rT,rB,h,seg,1);
+    const m = new THREE.Mesh(g,mat); m.position.set(px,py,pz); m.rotation.set(rx,ry,rz); return m;
+  }
+
+  const tail = new THREE.Group(); tail.position.x=-1.6;
+  tail.add(cone(0,.52,.9,3,finMat,0,.42,0,0,0,Math.PI*.12));
+  tail.add(cone(0,.52,.9,3,finMat,0,-.42,0,0,0,-Math.PI*.12));
+  fish.add(tail);
+  fish.add(cone(0,.16,.55,3,finMat,-.08,.54,0,0,0,-.06));
+  fish.add(cone(.04,.2,.45,3,finMat,.3,-.06,.36,Math.PI*.5,0,Math.PI*.38));
+  fish.add(cone(.04,.2,.45,3,finMat,.3,-.06,-.36,Math.PI*.5,0,-Math.PI*.38));
+
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(.09,14,14), eyeMat);
+  eye.position.set(1.1,.19,.32); fish.add(eye);
+  const pup = new THREE.Mesh(new THREE.SphereGeometry(.12,12,12), pupMat);
+  pup.position.copy(eye.position); fish.add(pup);
+  scene.add(fish);
+
+  const fish2 = new THREE.Group();
+  const b2G = new THREE.SphereGeometry(.55,20,14); b2G.scale(1.6,.5,.42);
+  fish2.add(new THREE.Mesh(b2G, new THREE.MeshPhongMaterial({color:0x2a7f9e,specular:0x5ba4f5,shininess:90,transparent:true,opacity:.7})));
+  const t2 = new THREE.Group(); t2.position.x=-0.88;
+  const f2m = new THREE.MeshPhongMaterial({color:0x1a5c7a,transparent:true,opacity:.7,side:THREE.DoubleSide});
+  t2.add(cone(0,.3,.55,3,f2m,0,.28,0,0,0,Math.PI*.12));
+  t2.add(cone(0,.3,.55,3,f2m,0,-.28,0,0,0,-Math.PI*.12));
+  fish2.add(t2); fish2.position.set(1.4,.2,-1.2); fish2.scale.setScalar(.52); scene.add(fish2);
+
+  const bubbles=[], bMat=new THREE.MeshPhongMaterial({color:0x3ecfbe,transparent:true,opacity:.45});
+  for(let i=0;i<6;i++){
+    const b=new THREE.Mesh(new THREE.SphereGeometry(.035+Math.random()*.03,8,8),bMat.clone());
+    b.position.set(Math.random()*2-1.2,Math.random()*.5-.25,Math.random()*.35-.17);
+    b.userData={spd:.006+Math.random()*.006,amp:.06+Math.random()*.06,off:Math.random()*Math.PI*2};
+    scene.add(b); bubbles.push(b);
+  }
+
+  let t=0, burst=0;
+  canvas.addEventListener('click',()=>{ burst=1.5; });
+
+  (function animate(){
+    requestAnimationFrame(animate);
+    t += 0.016 + burst*.012;
+    if(burst>0) burst-=.02;
+    fish.rotation.y = Math.sin(t*.65)*.2 + (burst?Math.sin(t*3)*.35:0);
+    fish.rotation.z = Math.sin(t*.45)*.055;
+    fish.position.y = Math.sin(t*.55)*.065;
+    fish.position.x = Math.sin(t*.3)*.1;
+    tail.rotation.y = Math.sin(t*2.1)*.38;
+    fish2.rotation.y = Math.sin(t*.4+1.2)*.15;
+    fish2.position.y = .2+Math.sin(t*.7+.5)*.05;
+    bubbles.forEach(b=>{
+      b.position.x+=b.userData.spd;
+      b.position.y+=Math.sin(t*1.8+b.userData.off)*.002;
+      if(b.position.x>3) b.position.x=-2.5;
+    });
+    renderer.render(scene,camera);
+  })();
+
+  window._fishTheme = function(th){
+    bodyMat.color.setHex(th==='light'?0x0e9e8e:0x1aab9a);
+    dirL.color.setHex(th==='light'?0x0e9e8e:0x3ecfbe);
+    dirL.intensity = th==='light'?1.5:2.0;
+  };
+  window._fishTheme(saved);
 })();
 
-function showToast(msg,type='success'){
-const t=document.getElementById('toast');
-t.textContent=msg;
-t.style.color= type==='error'? 'var(--danger)':'var(--safe)';
-t.style.borderColor=type==='error'?'var(--danger)':'var(--safe)';
-t.classList.add('show');
-setTimeout(()=>t.classList.remove('show'),3500);
+function openSec(btn, id){
+  document.querySelectorAll('.bubble').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sec-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sec-'+id).classList.add('active');
+  if(id==='map'){ renderMap(); loadObsFeed(); }
+  if(id==='population'){ renderPopTable(); }
+  if(id==='alerts'){ renderAlerts('all'); }
+}
+
+const CF = "'JetBrains Mono'";
+const SC = { ticks:{color:'#5a8a85',font:{family:CF,size:9}}, grid:{color:'rgba(62,207,190,0.05)'} };
+const LD = { labels:{color:'#5a8a85',font:{family:CF,size:9}} };
+
+new Chart(document.getElementById('trendChart'),{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[
+      {label:'Bluefin Tuna', data:[4200,3900,4100,3800,3500,3200,3000,2800,3100,3300,3500,3200],
+       borderColor:'#3ecfbe',backgroundColor:'rgba(62,207,190,.06)',tension:.4,fill:true,pointRadius:3},
+      {label:'Atlantic Cod', data:[2100,2000,1950,1800,1750,1700,1650,1600,1550,1700,1800,1750],
+       borderColor:'#f05a6e',backgroundColor:'rgba(240,90,110,.06)',tension:.4,fill:true,pointRadius:3},
+      {label:'Pacific Salmon',data:[5800,5600,5900,6100,6400,6200,5900,5600,5400,5700,5800,5600],
+       borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.04)',tension:.4,fill:true,pointRadius:3}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
+});
+
+new Chart(document.getElementById('donutChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Teleostei','Elasmobranchii','Crustacea','Mollusca','Cephalopoda','Other'],
+    datasets:[{data:[38,22,17,13,6,4],
+      backgroundColor:['#3ecfbe','#f05a6e','#f5a623','#5ba4f5','#3ecf8e','#9b8cde'],
+      borderWidth:0}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+    plugins:{legend:{position:'right',labels:{color:'#5a8a85',font:{family:CF,size:9},boxWidth:10}}}}
+});
+
+const QUOTA=[
+  {sp:'Bluefin Tuna',allowed:100,actual:142},
+  {sp:'Atlantic Cod',allowed:80, actual:91},
+  {sp:'Swordfish',   allowed:60, actual:55},
+  {sp:'Yellowfin',   allowed:120,actual:138},
+  {sp:'N.Sea Herring',allowed:200,actual:180},
+  {sp:'Haddock',     allowed:90, actual:95},
+];
+new Chart(document.getElementById('quotaChart'),{
+  type:'bar',
+  data:{
+    labels:QUOTA.map(q=>q.sp),
+    datasets:[
+      {label:'Quota (tons)',  data:QUOTA.map(q=>q.allowed),backgroundColor:'rgba(62,207,190,.3)',borderRadius:4},
+      {label:'Actual Catch', data:QUOTA.map(q=>q.actual),
+       backgroundColor:QUOTA.map(q=>q.actual>q.allowed?'rgba(240,90,110,.7)':'rgba(62,207,142,.6)'),borderRadius:4}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
+});
+
+new Chart(document.getElementById('barChart'),{
+  type:'bar',
+  data:{
+    labels:['Atlantic','Pacific','Indian','Arctic','Mediterranean','Caribbean','Southern'],
+    datasets:[
+      {label:'Fish (thousands)',  data:[4800,7200,3100,1400,900,1100,620],backgroundColor:'rgba(62,207,190,.7)',borderRadius:4},
+      {label:'Marine Mammals',    data:[890,1240,560,340,120,230,180],backgroundColor:'rgba(245,166,35,.6)',borderRadius:4}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
+});
+
+new Chart(document.getElementById('trajChart'),{
+  type:'line',
+  data:{
+    labels:['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+    datasets:[
+      {label:'Bluefin Tuna', data:[82,76,71,65,58,52,46,41,36,31,28],borderColor:'#f05a6e',tension:.4,fill:false,pointRadius:3},
+      {label:'Atlantic Cod', data:[54,51,49,44,40,37,34,31,29,27,26],borderColor:'#f5a623',tension:.4,fill:false,pointRadius:3},
+      {label:'Pacific Salmon',data:[62,64,67,68,66,63,65,67,68,66,64],borderColor:'#3ecfbe',tension:.4,fill:false,pointRadius:3},
+      {label:'Alaskan Pollock',data:[78,80,83,82,85,84,86,88,87,89,91],borderColor:'#3ecf8e',tension:.4,fill:false,pointRadius:3}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
+});
+
+const POP_DATA=[
+  {cat:'Large Pelagic Fish',  species:'Atlantic Bluefin Tuna',  region:'North Atlantic',    pop:'~1.6M',  health:28,  trend:'▼ -3.8%/yr', status:'critical'},
+  {cat:'Demersal Fish',       species:'Atlantic Cod',           region:'North Sea',         pop:'~260M',  health:26,  trend:'▼ -2.5%/yr', status:'critical'},
+  {cat:'Large Pelagic Fish',  species:'Swordfish',              region:'Mediterranean',     pop:'~1.2M',  health:38,  trend:'▼ -2.2%/yr', status:'critical'},
+  {cat:'Large Pelagic Fish',  species:'Yellowfin Tuna',         region:'Indian Ocean',      pop:'~4.8M',  health:54,  trend:'▼ -2.1%/yr', status:'high'},
+  {cat:'Reef Fish',           species:'Bluefin Grouper',        region:'Indo-Pacific',      pop:'~3.2M',  health:44,  trend:'▼ -1.8%/yr', status:'high'},
+  {cat:'Coastal Pelagic',     species:'North Sea Herring',      region:'North Sea',         pop:'~1.2B',  health:62,  trend:'▼ -0.9%/yr', status:'moderate'},
+  {cat:'Elasmobranch',        species:'Great White Shark',      region:'Global Oceans',     pop:'~3,500', health:32,  trend:'▼ -1.2%/yr', status:'high'},
+  {cat:'Demersal Fish',       species:'Pacific Halibut',        region:'North Pacific',     pop:'~150M',  health:73,  trend:'▼ -0.4%/yr', status:'low'},
+  {cat:'Demersal Fish',       species:'Alaskan Pollock',        region:'Bering Sea',        pop:'~1.4B',  health:91,  trend:'▲ +0.3%/yr', status:'low'},
+  {cat:'Anadromous Fish',     species:'Pacific Salmon',         region:'North Pacific',     pop:'~300M',  health:78,  trend:'▼ -0.5%/yr', status:'low'},
+  {cat:'Small Pelagic',       species:'Atlantic Mackerel',      region:'NE Atlantic',       pop:'~4.5B',  health:65,  trend:'▼ -1.1%/yr', status:'moderate'},
+  {cat:'Demersal Fish',       species:'Haddock',                region:'North Atlantic',    pop:'~180M',  health:68,  trend:'▼ -0.7%/yr', status:'moderate'},
+  {cat:'Flatfish',            species:'European Plaice',        region:'North Sea',         pop:'~540M',  health:71,  trend:'▲ +0.2%/yr', status:'low'},
+  {cat:'Elasmobranch',        species:'Hammerhead Shark',       region:'Tropical Oceans',   pop:'~200K',  health:24,  trend:'▼ -2.8%/yr', status:'critical'},
+  {cat:'Large Pelagic Fish',  species:'Bigeye Tuna',            region:'Pacific Ocean',     pop:'~2.1M',  health:48,  trend:'▼ -1.6%/yr', status:'high'},
+];
+
+const STATUS_COLOR = { critical:'var(--danger)', high:'var(--warn)', moderate:'var(--ac)', low:'var(--safe)' };
+
+function renderPopTable(){
+  const tbody = document.getElementById('popTableBody');
+  if(tbody.children.length) return; 
+  tbody.innerHTML = POP_DATA.map(r=>`
+    <tr>
+      <td style="color:var(--tm);font-size:.68rem">${r.cat}</td>
+      <td style="font-weight:600">${r.species}</td>
+      <td style="color:var(--tm)">${r.region}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--ac)">${r.pop}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:${r.trend.startsWith('▼')?'var(--danger)':'var(--safe)'}">${r.trend}</td>
+      <td class="pop-bar-cell">
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <div class="pop-bar" style="flex:1"><div class="pop-fill" style="width:${r.health}%;background:${STATUS_COLOR[r.status]}"></div></div>
+          <span style="font-size:.65rem;font-family:'JetBrains Mono',monospace;color:${STATUS_COLOR[r.status]}">${r.health}%</span>
+        </div>
+      </td>
+      <td><span class="rb rb-${r.status}">${r.status}</span></td>
+    </tr>`).join('');
+}
+
+const ALERT_DATA=[
+  {emoji:'🐟',name:'Atlantic Bluefin Tuna',sci:'Thunnus thynnus',level:'critical',
+   pop2024:28,decline:3.8,region:'North Atlantic',
+   detail:'Catch pressure at 92% of maximum sustainable yield. Commercial trawling fleets in the Mediterranean exceed annual quotas by 42%. Immediate international fishing moratorium recommended.',
+   yearCritical:2024,yearExtinct:2031},
+  {emoji:'🐟',name:'Atlantic Cod',sci:'Gadus morhua',level:'critical',
+   pop2024:26,decline:2.5,region:'North Sea',
+   detail:'Stock below critical biomass threshold. Demersal trawling destroying spawning grounds. Eastern North Sea seasonal closure advised before spring spawning season.',
+   yearCritical:2024,yearExtinct:2034},
+  {emoji:'⚔️',name:'Swordfish',sci:'Xiphias gladius',level:'critical',
+   pop2024:38,decline:2.2,region:'Mediterranean Sea',
+   detail:'Mediterranean population under severe pressure from longlining. Juvenile capture rate 60% above sustainable. EU quota compliance at only 58%.',
+   yearCritical:2024,yearExtinct:2041},
+  {emoji:'🦈',name:'Great White Shark',sci:'Carcharodon carcharias',level:'high',
+   pop2024:32,decline:1.2,region:'Global Oceans',
+   detail:'Bycatch and finning continue despite CITES Appendix II protection. Population estimated at ~3,500 globally. Declining 1.2% annually across Pacific and Atlantic.',
+   yearCritical:2030,yearExtinct:2051},
+  {emoji:'🐟',name:'Yellowfin Tuna',sci:'Thunnus albacares',level:'high',
+   pop2024:54,decline:2.1,region:'Indian Ocean',
+   detail:'Indian Ocean stocks show 15% year-over-year decline. Purse-seine overcapacity driving depletion. 20% quota reduction and increased vessel monitoring recommended.',
+   yearCritical:2036,yearExtinct:2050},
+  {emoji:'🐠',name:'Bluefin Grouper',sci:'Epinephelus sp.',level:'high',
+   pop2024:44,decline:1.8,region:'Indo-Pacific Reefs',
+   detail:'Reef overharvesting and habitat destruction from coral bleaching accelerating decline. Live reef fish trade contributing to 35% annual removal above sustainable yield.',
+   yearCritical:2031,yearExtinct:2048},
+  {emoji:'🐟',name:'Bigeye Tuna',sci:'Thunnus obesus',level:'high',
+   pop2024:48,decline:1.6,region:'Pacific Ocean',
+   detail:'Pacific stock declining due to illegal IUU fishing vessels operating outside monitored zones. Satellite tracking coverage gaps allow systematic overexploitation.',
+   yearCritical:2034,yearExtinct:2054},
+  {emoji:'🦈',name:'Hammerhead Shark',sci:'Sphyrna lewini',level:'critical',
+   pop2024:24,decline:2.8,region:'Tropical Oceans',
+   detail:'IUCN Critically Endangered. Fin trade driving 2.8% annual decline. Only 200,000 individuals estimated globally. Requires full protection in all jurisdictions.',
+   yearCritical:2024,yearExtinct:2033},
+  {emoji:'🐟',name:'North Sea Herring',sci:'Clupea harengus',level:'moderate',
+   pop2024:62,decline:0.9,region:'North Sea',
+   detail:'Population stable but declining gradually. Climate change shifting feeding grounds northward. Quota compliance at 88% — sustainable if current limits maintained.',
+   yearCritical:2057,yearExtinct:2093},
+  {emoji:'🐟',name:'Pacific Halibut',sci:'Hippoglossus stenolepis',level:'low',
+   pop2024:73,decline:0.4,region:'North Pacific',
+   detail:'Stock in relatively good condition. IPHC management practices effective. Continued monitoring required as ocean warming affects juvenile habitat.',
+   yearCritical:2087,yearExtinct:2207},
+  {emoji:'🐟',name:'Alaskan Pollock',sci:'Gadus chalcogrammus',level:'low',
+   pop2024:91,decline:-0.3,region:'Bering Sea',
+   detail:'Healthy and growing population. Sustainable fishery model with strict TAC enforcement. Currently +0.3% annually — serves as global best-practice example.',
+   yearCritical:null,yearExtinct:null},
+  {emoji:'🐟',name:'Pacific Salmon',sci:'Oncorhynchus sp.',level:'low',
+   pop2024:78,decline:0.5,region:'North Pacific',
+   detail:'Recovering well after 3-year selective fishing restrictions. River habitat restoration programs showing measurable results. Population stable at 78% health index.',
+   yearCritical:2118,yearExtinct:2180},
+];
+
+let currentYearFilter = 'all';
+
+function filterAlerts(btn, year){
+  document.querySelectorAll('.yr-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentYearFilter = year;
+  renderAlerts(year);
+}
+
+function renderAlerts(year){
+  const list = document.getElementById('alertList');
+  let data = ALERT_DATA;
+
+  if(year !== 'all'){
+    const y = parseInt(year);
+    data = ALERT_DATA.map(sp=>{
+      
+      const yrs  = y - 2024;
+      const proj = Math.max(0, sp.pop2024 - sp.decline * yrs);
+      let projLevel;
+      if(proj <= 0)         projLevel = 'critical';
+      else if(proj <= 15)   projLevel = 'critical';
+      else if(proj <= 35)   projLevel = 'high';
+      else if(proj <= 55)   projLevel = 'moderate';
+      else                  projLevel = 'low';
+      return { ...sp, projPop: proj.toFixed(1), projLevel, targetYear: y };
+    });
+  }
+
+  
+  const counts = {critical:0,high:0,moderate:0,low:0};
+  data.forEach(sp=>{ counts[(sp.projLevel||sp.level)]++; });
+  document.getElementById('alertCritCount').textContent = counts.critical;
+  document.getElementById('alertHighCount').textContent = counts.high;
+  document.getElementById('alertModCount').textContent  = counts.moderate;
+  document.getElementById('alertSafeCount').textContent = counts.low;
+
+  
+  const order = {critical:0,high:1,moderate:2,low:3};
+  data.sort((a,b)=> order[(a.projLevel||a.level)] - order[(b.projLevel||b.level)]);
+
+  list.innerHTML = data.map(sp=>{
+    const lvl   = sp.projLevel || sp.level;
+    const col   = {critical:'var(--danger)',high:'var(--warn)',moderate:'var(--ac)',low:'var(--safe)'}[lvl];
+    const pop   = sp.projPop !== undefined ? sp.projPop : sp.pop2024;
+    const label = sp.targetYear ? `${sp.targetYear} forecast` : 'Current (2024)';
+    const extinct = sp.yearExtinct
+      ? (sp.yearExtinct <= 2100 ? `⚠ Extinction risk ~${sp.yearExtinct}` : `Stable beyond 2100`)
+      : '✅ No extinction risk projected';
+    return `
+    <div class="alert-card ${lvl}">
+      <div class="ac-emoji">${sp.emoji}</div>
+      <div>
+        <div class="ac-name">${sp.name}</div>
+        <div class="ac-sci">${sp.sci} · ${sp.region}</div>
+        <div class="ac-detail">${sp.detail}</div>
+        <div style="margin-top:.4rem;font-size:.67rem;font-family:'JetBrains Mono',monospace;color:${col}">${extinct}</div>
+      </div>
+      <div class="ac-pop">
+        <div class="ac-pop-val" style="color:${col}">${pop}%</div>
+        <div class="ac-pop-lbl">${label}</div>
+      </div>
+      <span class="rb rb-${lvl}">${lvl}</span>
+    </div>`;
+  }).join('');
+}
+
+const MAP_PTS=[
+  {lat:36.7, lng:-74.2, sp:'Atlantic Bluefin Tuna', sci:'Thunnus thynnus',   count:1600000,  risk:'critical', ocean:'North Atlantic',  note:'Main spawning ground — Mediterranean & W. Atlantic'},
+  {lat:61.3, lng:4.1,   sp:'Atlantic Cod',          sci:'Gadus morhua',      count:260000000,risk:'critical', ocean:'North Sea',        note:'Critical depletion zone — quota exceeded 14%'},
+  {lat:38.2, lng:2.3,   sp:'Swordfish',              sci:'Xiphias gladius',   count:1200000,  risk:'critical', ocean:'Mediterranean',    note:'Longlining pressure — juvenile capture above limits'},
+  {lat:-33.8,lng:151.2, sp:'Great White Shark',      sci:'Carcharodon carch.',count:3500,     risk:'high',     ocean:'Pacific',          note:'~3,500 individuals globally — protected species'},
+  {lat:20.5, lng:-87.3, sp:'Yellowfin Tuna',         sci:'Thunnus albacares', count:4800000,  risk:'high',     ocean:'Caribbean/Indian', note:'Purse-seine overcapacity driving 2.1%/yr decline'},
+  {lat:-58.1,lng:-64.3, sp:'Humpback Whale',         sci:'Megaptera novaeang.',count:84000,   risk:'low',      ocean:'Antarctic',        note:'Recovering well — +3% annual population growth'},
+  {lat:35.6, lng:139.7, sp:'Pacific Salmon',         sci:'Oncorhynchus sp.',  count:300000000,risk:'low',      ocean:'North Pacific',    note:'78% health index — post-ban recovery ongoing'},
+  {lat:64.1, lng:-51.7, sp:'Alaskan Pollock',        sci:'Gadus chalcogramm.',count:1400000000,risk:'low',     ocean:'Bering Sea',       note:'Healthy stock — global best-practice fishery'},
+  {lat:-4.3, lng:55.3,  sp:'Bluefin Grouper',        sci:'Epinephelus sp.',   count:3200000,  risk:'high',     ocean:'Indian Ocean',     note:'Reef overharvesting — coral bleaching accelerating loss'},
+  {lat:15.5, lng:55.0,  sp:'Bigeye Tuna',            sci:'Thunnus obesus',    count:2100000,  risk:'high',     ocean:'Indian Ocean',     note:'IUU fishing outside monitored zones — declining 1.6%/yr'},
+  {lat:0,    lng:-30,   sp:'Hammerhead Shark',        sci:'Sphyrna lewini',    count:200000,   risk:'critical', ocean:'Tropical Atlantic', note:'IUCN Critically Endangered — fin trade primary threat'},
+  {lat:55,   lng:3,     sp:'North Sea Herring',       sci:'Clupea harengus',   count:1200000000,risk:'moderate',ocean:'North Sea',        note:'Climate shifting feeding grounds — quota holding'},
+];
+
+const RISK_COL={ critical:'#f05a6e', high:'#f5a623', moderate:'#3ecfbe', low:'#3ecf8e' };
+let activeFilters = new Set(['critical','high','moderate','low']);
+let mapDots = [];
+
+function toggleMapFilter(btn, risk){
+  btn.classList.toggle('on');
+  if(activeFilters.has(risk)) activeFilters.delete(risk);
+  else activeFilters.add(risk);
+  mapDots.forEach(({dot,pulse,risk:r})=>{
+    const vis = activeFilters.has(r) ? '' : 'none';
+    dot.setAttribute('display', vis);
+    pulse.setAttribute('display', vis);
+  });
+}
+
+function renderMap(){
+  const outer = document.getElementById('mapOuter');
+  if(outer.querySelector('svg')) return;
+  const tip = document.getElementById('mapTip');
+  const W = outer.offsetWidth || 900, H = outer.offsetHeight || 420;
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  
+  const defs = document.createElementNS(ns,'defs');
+  const grad = document.createElementNS(ns,'radialGradient');
+  grad.setAttribute('id','oceanGrad'); grad.setAttribute('cx','50%'); grad.setAttribute('cy','50%'); grad.setAttribute('r','70%');
+  const s1=document.createElementNS(ns,'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','#091d32');
+  const s2=document.createElementNS(ns,'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','#020d18');
+  grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+
+  const bg=document.createElementNS(ns,'rect'); bg.setAttribute('width',W); bg.setAttribute('height',H);
+  bg.setAttribute('fill','url(#oceanGrad)'); svg.appendChild(bg);
+
+  
+  [[30,0],[60,0],[-30,0]].forEach(([lat])=>{
+    const y=(90-lat)/180*H, l=document.createElementNS(ns,'line');
+    l.setAttribute('x1',0);l.setAttribute('y1',y);l.setAttribute('x2',W);l.setAttribute('y2',y);
+    l.setAttribute('stroke','rgba(62,207,190,0.06)');l.setAttribute('stroke-width','1');svg.appendChild(l);
+  });
+  [-120,-60,0,60,120].forEach(lng=>{
+    const x=(lng+180)/360*W, l=document.createElementNS(ns,'line');
+    l.setAttribute('x1',x);l.setAttribute('y1',0);l.setAttribute('x2',x);l.setAttribute('y2',H);
+    l.setAttribute('stroke','rgba(62,207,190,0.06)');l.setAttribute('stroke-width','1');svg.appendChild(l);
+  });
+
+  
+  const eq=document.createElementNS(ns,'line');
+  eq.setAttribute('x1',0);eq.setAttribute('y1',H/2);eq.setAttribute('x2',W);eq.setAttribute('y2',H/2);
+  eq.setAttribute('stroke','rgba(62,207,190,0.12)');eq.setAttribute('stroke-width','1.5');
+  eq.setAttribute('stroke-dasharray','6,4');svg.appendChild(eq);
+
+  
+  const landC='rgba(62,207,190,0.09)', landS='rgba(62,207,190,0.22)';
+  const shapes=[
+    
+    `M${.07*W},${.06*H} L${.02*W},${.22*H} L${.04*W},${.38*H} L${.08*W},${.52*H} L${.15*W},${.58*H} L${.22*W},${.62*H} L${.28*W},${.54*H} L${.31*W},${.42*H} L${.28*W},${.28*H} L${.22*W},${.18*H} L${.16*W},${.08*H} Z`,
+    
+    `M${.14*W},${.02*H} L${.10*W},${.08*H} L${.16*W},${.12*H} L${.20*W},${.06*H} Z`,
+    
+    `M${.22*W},${.56*H} L${.18*W},${.64*H} L${.20*W},${.78*H} L${.24*W},${.9*H} L${.30*W},${.92*H} L${.36*W},${.8*H} L${.35*W},${.68*H} L${.30*W},${.58*H} Z`,
+    
+    `M${.44*W},${.06*H} L${.40*W},${.16*H} L${.42*W},${.24*H} L${.46*W},${.26*H} L${.52*W},${.22*H} L${.54*W},${.14*H} L${.52*W},${.08*H} Z`,
+    
+    `M${.46*W},${.26*H} L${.42*W},${.36*H} L${.44*W},${.56*H} L${.48*W},${.74*H} L${.54*W},${.78*H} L${.60*W},${.62*H} L${.60*W},${.42*H} L${.58*W},${.28*H} L${.52*W},${.22*H} Z`,
+    
+    `M${.54*W},${.04*H} L${.50*W},${.16*H} L${.54*W},${.28*H} L${.58*W},${.38*H} L${.66*W},${.34*H} L${.76*W},${.28*H} L${.84*W},${.18*H} L${.82*W},${.06*H} L${.72*W},${.04*H} Z`,
+    
+    `M${.60*W},${.28*H} L${.58*W},${.38*H} L${.62*W},${.48*H} L${.66*W},${.38*H} Z`,
+    
+    `M${.72*W},${.58*H} L${.70*W},${.70*H} L${.76*W},${.80*H} L${.84*W},${.76*H} L${.86*W},${.64*H} L${.82*W},${.56*H} Z`,
+    
+    `M${.80*W},${.22*H} L${.78*W},${.28*H} L${.82*W},${.30*H} L${.84*W},${.24*H} Z`,
+  ];
+  shapes.forEach(d=>{
+    const p=document.createElementNS(ns,'path');
+    p.setAttribute('d',d); p.setAttribute('fill',landC);
+    p.setAttribute('stroke',landS); p.setAttribute('stroke-width','1'); svg.appendChild(p);
+  });
+
+  outer.appendChild(svg);
+
+  
+  if(!document.getElementById('mapPulseStyle')){
+    const st=document.createElement('style'); st.id='mapPulseStyle';
+    st.textContent=`@keyframes mpulse{0%{r:8;opacity:.7}100%{r:22;opacity:0}}`;
+    document.head.appendChild(st);
+  }
+
+  
+  MAP_PTS.forEach(pt=>{
+    const x=(pt.lng+180)/360*W, y=(90-pt.lat)/180*H;
+    const col=RISK_COL[pt.risk];
+    const sz = 6 + Math.min(Math.log10(pt.count+1)*1.5, 6);
+
+    const pulse=document.createElementNS(ns,'circle');
+    pulse.setAttribute('cx',x);pulse.setAttribute('cy',y);pulse.setAttribute('r','8');
+    pulse.setAttribute('fill','none');pulse.setAttribute('stroke',col);
+    pulse.setAttribute('stroke-width','1.5');pulse.setAttribute('opacity','0');
+    const dur=(Math.random()*.8+1.8).toFixed(1);
+    pulse.style.animation=`mpulse ${dur}s ease-out ${(Math.random()*2).toFixed(1)}s infinite`;
+    svg.appendChild(pulse);
+
+    const dot=document.createElementNS(ns,'circle');
+    dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r',sz.toFixed(1));
+    dot.setAttribute('fill',col);dot.setAttribute('opacity','.88');dot.setAttribute('cursor','pointer');
+    dot.style.filter=`drop-shadow(0 0 ${sz}px ${col})`;
+
+    dot.addEventListener('mouseenter',ev=>{
+      const popStr = pt.count>=1000000000 ? (pt.count/1000000000).toFixed(1)+'B'
+                   : pt.count>=1000000   ? (pt.count/1000000).toFixed(1)+'M'
+                   : pt.count>=1000      ? (pt.count/1000).toFixed(1)+'K'
+                   : pt.count.toLocaleString();
+      tip.innerHTML=`
+        <div class="mt-name">${pt.sp}</div>
+        <div style="font-size:.62rem;color:var(--tm);font-style:italic;margin-bottom:.4rem">${pt.sci}</div>
+        <div class="mt-row"><span>Ocean</span><span class="mt-val">${pt.ocean}</span></div>
+        <div class="mt-row"><span>Population</span><span class="mt-val" style="color:var(--ac)">${popStr}</span></div>
+        <div class="mt-row"><span>Risk Level</span><span class="mt-val" style="color:${col}">${pt.risk.toUpperCase()}</span></div>
+        <div style="margin-top:.4rem;font-size:.62rem;color:var(--tp);line-height:1.4">${pt.note}</div>
+        <div style="margin-top:.3rem;font-size:.6rem;color:var(--tm)">${pt.lat.toFixed(1)}°, ${pt.lng.toFixed(1)}°</div>`;
+      const rect=outer.getBoundingClientRect();
+      let lx=ev.clientX-rect.left+14, ly=ev.clientY-rect.top-10;
+      if(lx+190>W) lx=lx-205;
+      if(ly+160>H) ly=ly-160;
+      tip.style.left=lx+'px'; tip.style.top=ly+'px';
+      tip.classList.add('show');
+    });
+    dot.addEventListener('mouseleave',()=>tip.classList.remove('show'));
+    svg.appendChild(dot);
+    mapDots.push({dot,pulse,risk:pt.risk});
+  });
+
+  
+  const leg=document.createElement('div'); leg.className='map-legend';
+  leg.innerHTML='<div style="font-family:\'JetBrains Mono\',monospace;font-size:.6rem;color:var(--tm);margin-bottom:.4rem;letter-spacing:.08em">RISK LEVEL</div>'+
+    Object.entries(RISK_COL).map(([k,c])=>
+      `<div class="ml-item"><div class="ml-dot" style="background:${c};box-shadow:0 0 5px ${c}"></div>${k.charAt(0).toUpperCase()+k.slice(1)}</div>`
+    ).join('');
+  outer.appendChild(leg);
+}
+
+async function loadObsFeed(){
+  const el = document.getElementById('obsFeed');
+  if(!el || el.dataset.loaded) return;
+  el.dataset.loaded='1';
+  try{
+    const data=await fetch('/api/observations/live').then(r=>r.json());
+    if(!data.length) throw new Error('empty');
+    el.innerHTML=data.map(r=>`
+      <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:1rem;padding:.7rem .4rem;border-bottom:1px solid var(--bdr);font-size:.72rem;animation:fadeUp .4s ease">
+        <div>
+          <div style="font-weight:600;color:var(--th)">${r.species||r.genericName||'Unknown species'}</div>
+          <div style="font-size:.6rem;color:var(--tm);margin-top:2px">${r.country||'Unknown'} · ${r.basisOfRecord||'Observation'}</div>
+        </div>
+        <div style="font-size:.62rem;color:var(--tm)">${r.decimalLatitude?.toFixed(2)||'?'}°, ${r.decimalLongitude?.toFixed(2)||'?'}°</div>
+        <div style="font-size:.6rem;color:var(--tm);text-align:right">${r.eventDate?new Date(r.eventDate).toLocaleDateString():'N/A'}</div>
+      </div>`).join('');
+  }catch{
+    
+    const demo=[
+      {sp:'Thunnus thynnus',    loc:'Atlantic Ocean · USA',  coords:'36.7°,-74.2°', date:'2026-03-08'},
+      {sp:'Gadus morhua',       loc:'North Sea · Norway',    coords:'61.3°, 4.1°',  date:'2026-03-07'},
+      {sp:'Xiphias gladius',    loc:'Mediterranean · Spain', coords:'38.2°, 2.3°',  date:'2026-03-07'},
+      {sp:'Carcharodon carch.', loc:'Pacific · Australia',   coords:'-33.8°,151.2°',date:'2026-03-06'},
+      {sp:'Oncorhynchus sp.',   loc:'North Pacific · Japan', coords:'35.6°,139.7°', date:'2026-03-05'},
+    ];
+    el.innerHTML=demo.map(r=>`
+      <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:1rem;padding:.7rem .4rem;border-bottom:1px solid var(--bdr);font-size:.72rem">
+        <div><div style="font-weight:600;color:var(--th)">${r.sp}</div><div style="font-size:.6rem;color:var(--tm)">${r.loc}</div></div>
+        <div style="font-size:.62rem;color:var(--tm)">${r.coords}</div>
+        <div style="font-size:.6rem;color:var(--tm)">${r.date}</div>
+      </div>`).join('');
+  }
+}
+
+const SPECIES_DB={
+  bluefin_tuna:  {name:'Atlantic Bluefin Tuna',pop:28,decline:3.8},
+  atlantic_cod:  {name:'Atlantic Cod',         pop:26,decline:2.5},
+  swordfish:     {name:'Swordfish',            pop:38,decline:2.2},
+  yellowfin_tuna:{name:'Yellowfin Tuna',       pop:54,decline:2.1},
+  grouper:       {name:'Bluefin Grouper',      pop:44,decline:1.8},
+  herring:       {name:'North Sea Herring',    pop:62,decline:0.9},
+  halibut:       {name:'Pacific Halibut',      pop:73,decline:0.4},
+  pollock:       {name:'Alaskan Pollock',      pop:91,decline:-0.3},
+  salmon:        {name:'Pacific Salmon',       pop:78,decline:0.5},
+  shark:         {name:'Great White Shark',    pop:32,decline:1.2},
+};
+
+function runPrediction(){
+  const key=document.getElementById('predFish').value;
+  const year=parseInt(document.getElementById('predYear').value);
+  const res=document.getElementById('predResult');
+  const mini=document.getElementById('predMini');
+  if(!key){showToast('Please select a species.','error');return;}
+  if(!year||year<2025||year>2100){showToast('Enter year 2025–2100.','error');return;}
+  const sp=SPECIES_DB[key], yrs=year-2024, proj=sp.pop-sp.decline*yrs;
+  const pct=Math.max(0,proj).toFixed(1);
+  res.className='pred-result show';
+  mini.innerHTML=''; mini.classList.add('show');
+  let cls,icon,text;
+  if(proj<=0){cls='exhaust';icon='☠️';text=`${sp.name} → EXTINCT by ${year}`;}
+  else if(proj<=10){cls='exhaust';icon='🚨';text=`${sp.name} → ${pct}% by ${year} — Near extinction`;}
+  else if(proj<=30){cls='exhaust';icon='⚠️';text=`${sp.name} → ${pct}% by ${year} — Severe depletion risk`;}
+  else if(proj<=55){cls='warn';icon='📉';text=`${sp.name} → ${pct}% by ${year} — Declining, intervention needed`;}
+  else if(proj<=80){cls='safe';icon='✅';text=`${sp.name} → ${pct}% by ${year} — Stable, monitor closely`;}
+  else{cls='safe';icon='🐟';text=`${sp.name} → ${pct}% by ${year} — Healthy, no exhaustion risk`;}
+  res.classList.add(cls);
+  document.getElementById('predIcon').textContent=icon;
+  document.getElementById('predText').textContent=text;
+  const col={exhaust:'var(--danger)',warn:'var(--warn)',safe:'var(--safe)'}[cls];
+  const steps=9, stepYr=Math.max(1,Math.ceil(yrs/steps));
+  for(let i=0;i<=steps;i++){
+    const y=2024+i*stepYr, pop=Math.max(0,sp.pop-sp.decline*(y-2024));
+    const h=Math.max(2,(pop/100)*26);
+    const bar=document.createElement('div');
+    bar.className='mini-bar'; bar.title=`${y}: ${pop.toFixed(0)}%`;
+    bar.style.cssText=`height:${h}px;background:${col};opacity:${.35+(i/steps)*.65};`;
+    mini.appendChild(bar);
+  }
+}
+document.getElementById('predYear').addEventListener('keydown',e=>{ if(e.key==='Enter') runPrediction(); });
+
+function showToast(msg, type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`show ${type}`;
+  setTimeout(()=>{ t.className=''; },3600);
 }
 </script>
 
 {% block scripts %}{% endblock %}
-
 </body>
 </html>
