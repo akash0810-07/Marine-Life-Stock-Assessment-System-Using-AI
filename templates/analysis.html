@@ -1,38 +1,277 @@
-{% extends 'base.html' %}
-{% block body %}
+{% extends "base.html" %}
+{% block title %}Analysis{% endblock %}
 
-<h2 class="text-center text-warning mb-4">📊 Marine Stock Analysis</h2>
+{% block head %}
+<style>
+  .section-title {
+    font-family:var(--font-head);
+    font-size:1.1rem; font-weight:800;
+    letter-spacing:-.01em;
+    background:linear-gradient(130deg,var(--biolume),var(--biolume2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    margin-bottom:.3rem;
+  }
+  .section-sub { font-size:.65rem; color:var(--muted); margin-bottom:1.25rem; }
 
-<div class="row text-center">
+  .progress-row { margin-bottom:1rem; }
+  .pr-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.3rem; }
+  .pr-label { font-size:.75rem; }
+  .pr-val   { font-size:.7rem; }
+  .pr-track { height:6px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+  .pr-fill  { height:100%; border-radius:3px; transition:width 1.2s ease; }
 
-    <div class="col-md-3">
-        <div class="card bg-success text-white p-3">
-            <h4>Total Species</h4>
-            <h2>{{ data["Total Species"] }}</h2>
-        </div>
-    </div>
+  .data-table { width:100%; border-collapse:collapse; font-size:.72rem; }
+  .data-table th {
+    text-align:left; padding:.55rem .75rem;
+    font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted);
+    border-bottom:1px solid var(--border);
+  }
+  .data-table td {
+    padding:.6rem .75rem;
+    border-bottom:1px solid rgba(0,232,184,.05);
+    color:var(--text);
+  }
+  .data-table tr:hover td { background:rgba(0,232,184,.03); }
+  .data-table tr:last-child td { border-bottom:none; }
 
-    <div class="col-md-3">
-        <div class="card bg-primary text-white p-3">
-            <h4>Healthy Population</h4>
-            <h2>{{ data["Healthy Population"] }}</h2>
-        </div>
-    </div>
+  .quota-row {
+    display:grid;
+    grid-template-columns:130px 1fr 80px 60px;
+    align-items:center; gap:1rem;
+    padding:.7rem 0;
+    border-bottom:1px solid rgba(0,232,184,.06);
+  }
+  .quota-row:last-child { border-bottom:none; }
+  .q-species { font-size:.76rem; font-weight:700; }
+  .q-track   { height:8px; background:rgba(255,255,255,.07); border-radius:4px; overflow:hidden; position:relative; }
+  .q-fill    { height:100%; border-radius:4px; }
+  .q-mark    { position:absolute; top:0; bottom:0; width:2px; background:rgba(255,255,255,.3); }
+  .q-numbers { font-size:.65rem; text-align:right; }
+  .q-over    { color:var(--danger); }
+  .q-ok      { color:var(--safe); }
 
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark p-3">
-            <h4>Endangered</h4>
-            <h2>{{ data["Endangered"] }}</h2>
-        </div>
-    </div>
+  .insight-card {
+    background:rgba(0,232,184,.05);
+    border:1px solid rgba(0,232,184,.15);
+    border-radius:10px; padding:1rem 1.2rem;
+    margin-bottom:.75rem;
+  }
+  .insight-head { display:flex; gap:.6rem; align-items:flex-start; margin-bottom:.4rem; }
+  .insight-icon { font-size:1.1rem; flex-shrink:0; }
+  .insight-title { font-family:var(--font-head); font-size:.82rem; font-weight:700; }
+  .insight-body  { font-size:.7rem; color:var(--muted); line-height:1.6; }
 
-    <div class="col-md-3">
-        <div class="card bg-danger text-white p-3">
-            <h4>Critical</h4>
-            <h2>{{ data["Critical"] }}</h2>
-        </div>
-    </div>
+  .insight-card.danger-card {
+    background:rgba(240,45,58,.05);
+    border-color:rgba(240,45,58,.2);
+  }
+  .insight-card.warn-card {
+    background:rgba(255,193,59,.05);
+    border-color:rgba(255,193,59,.2);
+  }
+</style>
+{% endblock %}
 
+{% block content %}
+
+<div style="margin-bottom:1.75rem;display:flex;align-items:flex-end;justify-content:space-between;">
+  <div>
+    <h2 style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;
+               background:linear-gradient(130deg,var(--biolume),var(--biolume2));
+               -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+      Deep Analysis
+    </h2>
+    <p style="font-size:.68rem;color:var(--muted);margin-top:.25rem;">
+      Population modelling · Quota compliance · Field submission records · Authority intelligence
+    </p>
+  </div>
+  <a href="{{ url_for('index') }}" class="btn btn-outline" style="text-decoration:none;font-size:.7rem;">
+    ← Back to Dashboard
+  </a>
 </div>
 
+<div class="grid-a mb">
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Species Population Health</span>
+      <span class="badge badge-biolume">Index Score</span>
+    </div>
+    {% set species_health = [
+      ('Atlantic Bluefin Tuna', 8,   'critical'),
+      ('Atlantic Cod',          19,  'critical'),
+      ('Swordfish',             22,  'critical'),
+      ('Yellowfin Tuna',        33,  'high'),
+      ('Bluefin Grouper',       39,  'high'),
+      ('North Sea Herring',     56,  'moderate'),
+      ('Pacific Halibut',       72,  'low'),
+      ('Alaskan Pollock',       81,  'low'),
+      ('Pacific Salmon',        78,  'low'),
+    ] %}
+    {% for name, score, level in species_health %}
+    <div class="progress-row">
+      <div class="pr-head">
+        <span class="pr-label">{{ name }}</span>
+        <span class="pr-val" style="color:
+          {% if level=='critical' %}var(--danger)
+          {% elif level=='high' %}var(--warning)
+          {% elif level=='moderate' %}var(--biolume)
+          {% else %}var(--safe){% endif %};">{{ score }}%</span>
+      </div>
+      <div class="pr-track">
+        <div class="pr-fill" style="width:{{ score }}%;background:
+          {% if level=='critical' %}var(--danger)
+          {% elif level=='high' %}var(--warning)
+          {% elif level=='moderate' %}var(--biolume)
+          {% else %}var(--safe){% endif %};"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div>
+    <div class="section-title" style="margin-bottom:.25rem">Authority Insights</div>
+    <div class="section-sub">AI-assisted recommendations for fisheries management</div>
+
+    <div class="insight-card danger-card">
+      <div class="insight-head">
+        <span class="insight-icon">🚨</span>
+        <span class="insight-title">Bluefin Tuna — Immediate Moratorium Recommended</span>
+      </div>
+      <p class="insight-body">Current catch rates exceed sustainable yield by 42%. Population recovery requires a complete fishing ban for a minimum of 18–24 months in the North Atlantic zone.</p>
+    </div>
+
+    <div class="insight-card danger-card">
+      <div class="insight-head">
+        <span class="insight-icon">⚠️</span>
+        <span class="insight-title">Atlantic Cod — Quota Exceeded by 14%</span>
+      </div>
+      <p class="insight-body">North Sea cod stocks have fallen below the critical biomass threshold. Seasonal closure of eastern North Sea fishing zones advised before the spring spawning season.</p>
+    </div>
+
+    <div class="insight-card warn-card">
+      <div class="insight-head">
+        <span class="insight-icon">📊</span>
+        <span class="insight-title">Yellowfin Tuna — Quota Reduction Needed</span>
+      </div>
+      <p class="insight-body">Indian Ocean stocks show a 15% YoY decline. Recommend reducing current annual quotas by 20% and increasing observer coverage on commercial vessels.</p>
+    </div>
+
+    <div class="insight-card">
+      <div class="insight-head">
+        <span class="insight-icon">✅</span>
+        <span class="insight-title">Alaskan Pollock — Healthy Ecosystem</span>
+      </div>
+      <p class="insight-body">Stock surveys confirm Alaskan Pollock populations remain robust. Current management practices are effective — maintain existing seasonal restrictions.</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2 mb">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">10-Year Population Trajectory</span>
+    </div>
+    <div class="chart-wrap-tall" style="height:270px"><canvas id="trajectoryChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Overfishing Risk Distribution</span>
+    </div>
+    <div class="chart-wrap-tall" style="height:270px"><canvas id="riskPieChart"></canvas></div>
+  </div>
+</div>
+
+<div class="card mb">
+  <div class="card-header">
+    <span class="card-title">Fishing Quota Compliance · Current Season</span>
+    <span class="badge badge-danger">3 Exceeded</span>
+  </div>
+  {% for q in quota_data %}
+  {% set pct = (q.actual / q.allowed * 100)|round|int %}
+  <div class="quota-row">
+    <div class="q-species">{{ q.species }}</div>
+    <div>
+      <div class="q-track">
+        <div class="q-fill" style="width:{{ [pct,100]|min }}%;background:
+          {% if q.actual > q.allowed %}var(--danger){% else %}var(--safe){% endif %};"></div>
+        <div class="q-mark" style="left:100%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:.25rem;font-size:.6rem;color:var(--muted);">
+        <span>0</span><span>Quota: {{ q.allowed }}t</span>
+      </div>
+    </div>
+    <div class="q-numbers">
+      <div>{{ q.actual }}t caught</div>
+      <div class="{% if q.actual > q.allowed %}q-over{% else %}q-ok{% endif %}">
+        {% if q.actual > q.allowed %}+{{ q.actual - q.allowed }}t over{% else %}{{ q.allowed - q.actual }}t left{% endif %}
+      </div>
+    </div>
+    <span class="rb {% if q.actual > q.allowed %}rb-critical{% else %}rb-low{% endif %}">
+      {% if q.actual > q.allowed %}over{% else %}ok{% endif %}
+    </span>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Field Observation Records</span>
+    <span class="badge badge-biolume">{{ observations|length }} total</span>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const chartFont = "'DM Mono'";
+  const scaleOpts = {
+    ticks:{ color:'#6da5be', font:{family:chartFont,size:9} },
+    grid: { color:'rgba(0,232,184,0.05)' }
+  };
+
+  new Chart(document.getElementById('trajectoryChart'),{
+    type:'line',
+    data:{
+      labels:['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+      datasets:[
+        { label:'Bluefin Tuna (×100)',
+          data:[82,76,71,65,58,52,46,41,36,31,28],
+          borderColor:'#f02d3a', tension:.4, fill:false, pointRadius:3 },
+        { label:'Atlantic Cod (×100)',
+          data:[54,51,49,44,40,37,34,31,29,27,26],
+          borderColor:'#ffc13b', tension:.4, fill:false, pointRadius:3 },
+        { label:'Pacific Salmon (×100)',
+          data:[62,64,67,68,66,63,65,67,68,66,64],
+          borderColor:'#00e8b8', tension:.4, fill:false, pointRadius:3 },
+        { label:'Alaskan Pollock (×100)',
+          data:[78,80,83,82,85,84,86,88,87,89,91],
+          borderColor:'#06d6a0', tension:.4, fill:false, pointRadius:3 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#6da5be', font:{family:chartFont,size:9} } } },
+      scales:{ x:scaleOpts, y:scaleOpts }
+    }
+  });
+
+  new Chart(document.getElementById('riskPieChart'),{
+    type:'pie',
+    data:{
+      labels:['Critical','High','Moderate','Low / Safe'],
+      datasets:[{
+        data:[3,2,1,2],
+        backgroundColor:['#f02d3a','#ffc13b','#00e8b8','#06d6a0'],
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'right', labels:{ color:'#6da5be', font:{family:chartFont,size:10}, boxWidth:12 } } }
+    }
+  });
+</script>
 {% endblock %}
