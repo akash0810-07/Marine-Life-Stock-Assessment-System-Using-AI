@@ -607,24 +607,6 @@
     </div>
 
     
-    <div class="g3 mb">
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">Population Trends — Annual</span>
-          <span class="badge bdg-live">Live</span>
-        </div>
-        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">Species by Class</span>
-          <span class="badge bdg-ac">GBIF</span>
-        </div>
-        <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
-      </div>
-    </div>
-
-    
     <div class="ga mb">
       <div class="card">
         <div class="card-hdr">
@@ -653,35 +635,10 @@
         </ul>
       </div>
     </div>
-
-    
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title">Fishing Quota Compliance — Current Season</span>
-        <span class="badge bdg-danger">3 Exceeded</span>
-      </div>
-      <div class="chart-tall"><canvas id="quotaChart"></canvas></div>
-    </div>
-
   </div>
 
   
   <div class="sec-panel" id="sec-population">
-
-    <div class="g2 mb">
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">Population by Ocean Region</span>
-        </div>
-        <div class="chart-tall"><canvas id="barChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">10-Year Population Trajectory</span>
-        </div>
-        <div class="chart-tall"><canvas id="trajChart"></canvas></div>
-      </div>
-    </div>
 
     
     <div class="card">
@@ -924,85 +881,6 @@ function openSec(btn, id){
   if(id==='population'){ renderPopTable(); }
   if(id==='alerts'){ renderAlerts('all'); }
 }
-
-const CF = "'JetBrains Mono'";
-const SC = { ticks:{color:'#5a8a85',font:{family:CF,size:9}}, grid:{color:'rgba(62,207,190,0.05)'} };
-const LD = { labels:{color:'#5a8a85',font:{family:CF,size:9}} };
-
-new Chart(document.getElementById('trendChart'),{
-  type:'line',
-  data:{
-    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-    datasets:[
-      {label:'Bluefin Tuna', data:[4200,3900,4100,3800,3500,3200,3000,2800,3100,3300,3500,3200],
-       borderColor:'#3ecfbe',backgroundColor:'rgba(62,207,190,.06)',tension:.4,fill:true,pointRadius:3},
-      {label:'Atlantic Cod', data:[2100,2000,1950,1800,1750,1700,1650,1600,1550,1700,1800,1750],
-       borderColor:'#f05a6e',backgroundColor:'rgba(240,90,110,.06)',tension:.4,fill:true,pointRadius:3},
-      {label:'Pacific Salmon',data:[5800,5600,5900,6100,6400,6200,5900,5600,5400,5700,5800,5600],
-       borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.04)',tension:.4,fill:true,pointRadius:3}
-    ]
-  },
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
-});
-
-new Chart(document.getElementById('donutChart'),{
-  type:'doughnut',
-  data:{
-    labels:['Teleostei','Elasmobranchii','Crustacea','Mollusca','Cephalopoda','Other'],
-    datasets:[{data:[38,22,17,13,6,4],
-      backgroundColor:['#3ecfbe','#f05a6e','#f5a623','#5ba4f5','#3ecf8e','#9b8cde'],
-      borderWidth:0}]
-  },
-  options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
-    plugins:{legend:{position:'right',labels:{color:'#5a8a85',font:{family:CF,size:9},boxWidth:10}}}}
-});
-
-const QUOTA=[
-  {sp:'Bluefin Tuna',allowed:100,actual:142},
-  {sp:'Atlantic Cod',allowed:80, actual:91},
-  {sp:'Swordfish',   allowed:60, actual:55},
-  {sp:'Yellowfin',   allowed:120,actual:138},
-  {sp:'N.Sea Herring',allowed:200,actual:180},
-  {sp:'Haddock',     allowed:90, actual:95},
-];
-new Chart(document.getElementById('quotaChart'),{
-  type:'bar',
-  data:{
-    labels:QUOTA.map(q=>q.sp),
-    datasets:[
-      {label:'Quota (tons)',  data:QUOTA.map(q=>q.allowed),backgroundColor:'rgba(62,207,190,.3)',borderRadius:4},
-      {label:'Actual Catch', data:QUOTA.map(q=>q.actual),
-       backgroundColor:QUOTA.map(q=>q.actual>q.allowed?'rgba(240,90,110,.7)':'rgba(62,207,142,.6)'),borderRadius:4}
-    ]
-  },
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
-});
-
-new Chart(document.getElementById('barChart'),{
-  type:'bar',
-  data:{
-    labels:['Atlantic','Pacific','Indian','Arctic','Mediterranean','Caribbean','Southern'],
-    datasets:[
-      {label:'Fish (thousands)',  data:[4800,7200,3100,1400,900,1100,620],backgroundColor:'rgba(62,207,190,.7)',borderRadius:4},
-      {label:'Marine Mammals',    data:[890,1240,560,340,120,230,180],backgroundColor:'rgba(245,166,35,.6)',borderRadius:4}
-    ]
-  },
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
-});
-
-new Chart(document.getElementById('trajChart'),{
-  type:'line',
-  data:{
-    labels:['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
-    datasets:[
-      {label:'Bluefin Tuna', data:[82,76,71,65,58,52,46,41,36,31,28],borderColor:'#f05a6e',tension:.4,fill:false,pointRadius:3},
-      {label:'Atlantic Cod', data:[54,51,49,44,40,37,34,31,29,27,26],borderColor:'#f5a623',tension:.4,fill:false,pointRadius:3},
-      {label:'Pacific Salmon',data:[62,64,67,68,66,63,65,67,68,66,64],borderColor:'#3ecfbe',tension:.4,fill:false,pointRadius:3},
-      {label:'Alaskan Pollock',data:[78,80,83,82,85,84,86,88,87,89,91],borderColor:'#3ecf8e',tension:.4,fill:false,pointRadius:3}
-    ]
-  },
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:LD}},scales:{x:SC,y:SC}}
-});
 
 const POP_DATA=[
   {cat:'Large Pelagic Fish',  species:'Atlantic Bluefin Tuna',  region:'North Atlantic',    pop:'~1.6M',  health:28,  trend:'▼ -3.8%/yr', status:'critical'},
